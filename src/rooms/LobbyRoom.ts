@@ -233,37 +233,86 @@ export class LobbyRoom extends Room<LobbyState> {
       player1.setStatus('matched');
       player2.setStatus('matched');
 
-      // Send matched message to both players
-      const client1 = this.clients.find(
-        (c) => c.sessionId === match.player1SessionId
-      );
-      const client2 = this.clients.find(
-        (c) => c.sessionId === match.player2SessionId
-      );
+      // Create a Snap game room for the matched players using Colyseus matchmaker
+      (async () => {
+        try {
+          // Use private room name so only these two players can join
+          const roomName = match.matchId;
+          const room = await (this as any).presence.matchMaker.createRoom('snap', {
+            roomName,
+            maxClients: 2,
+            metadata: {
+              private: true,
+              player1: match.player1SessionId,
+              player2: match.player2SessionId,
+            },
+          });
 
-      if (client1) {
-        client1.send('matched', {
-          matchId: match.matchId,
-          opponentSessionId: match.player2SessionId,
-          matchedAt: match.matchedAt,
-        });
-        log('Sent matched message to player1:', {
-          sessionId: match.player1SessionId,
-          matchId: match.matchId,
-        });
-      }
+          log('Created Snap room:', {
+            roomId: room.roomId,
+            player1: match.player1SessionId,
+            player2: match.player2SessionId,
+          });
 
-      if (client2) {
-        client2.send('matched', {
-          matchId: match.matchId,
-          opponentSessionId: match.player1SessionId,
-          matchedAt: match.matchedAt,
-        });
-        log('Sent matched message to player2:', {
-          sessionId: match.player2SessionId,
-          matchId: match.matchId,
-        });
-      }
+          // Send matched message to both players with the room ID
+          const client1 = this.clients.find(
+            (c) => c.sessionId === match.player1SessionId
+          );
+          const client2 = this.clients.find(
+            (c) => c.sessionId === match.player2SessionId
+          );
+
+          if (client1) {
+            client1.send('matched', {
+              matchId: room.roomId,
+              opponentSessionId: match.player2SessionId,
+              matchedAt: match.matchedAt,
+            });
+            log('Sent matched message to player1:', {
+              sessionId: match.player1SessionId,
+              matchId: room.roomId,
+            });
+          }
+
+          if (client2) {
+            client2.send('matched', {
+              matchId: room.roomId,
+              opponentSessionId: match.player1SessionId,
+              matchedAt: match.matchedAt,
+            });
+            log('Sent matched message to player2:', {
+              sessionId: match.player2SessionId,
+              matchId: room.roomId,
+            });
+          }
+        } catch (error) {
+          log.error('Failed to create Snap room:', error);
+
+          // Fallback: send fake matchId and let clients try joinOrCreate
+          const client1 = this.clients.find(
+            (c) => c.sessionId === match.player1SessionId
+          );
+          const client2 = this.clients.find(
+            (c) => c.sessionId === match.player2SessionId
+          );
+
+          if (client1) {
+            client1.send('matched', {
+              matchId: match.matchId,
+              opponentSessionId: match.player2SessionId,
+              matchedAt: match.matchedAt,
+            });
+          }
+
+          if (client2) {
+            client2.send('matched', {
+              matchId: match.matchId,
+              opponentSessionId: match.player1SessionId,
+              matchedAt: match.matchedAt,
+            });
+          }
+        }
+      })();
 
       // Remove matched players from lobby
       this.state.removePlayer(match.player1SessionId);

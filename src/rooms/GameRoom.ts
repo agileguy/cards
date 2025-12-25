@@ -35,9 +35,12 @@ export abstract class GameRoom<TState extends BaseGameState> extends Room<TState
     // Create game engine
     this.gameEngine = this.createGameEngine();
 
-    // Initialize state through the engine
+    // Initialize empty state and set it
     const initialState = this.gameEngine.initialize([]);
     this.setState(initialState);
+
+    // Give engine reference to our state so it can modify it in place later
+    (this.gameEngine as any).state = this.state;
 
     // Set initial metadata
     this.updateMetadata();

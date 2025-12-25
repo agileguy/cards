@@ -15,15 +15,21 @@ export class SnapEngine implements IGameEngine<SnapGameState> {
 
   /**
    * Initialize game with players and deal cards
+   * IMPORTANT: Modifies the passed state in place to avoid schema ownership issues
    */
   initialize(players: GamePlayer[]): SnapGameState {
     log('Initializing Snap game', { playerCount: players.length });
 
-    this.state = new SnapGameState();
+    // Don't create new state, use the one we have
+    if (!this.state) {
+      this.state = new SnapGameState();
+    }
 
-    // Add players to state
+    // Add players to state if not already there
     players.forEach((player) => {
-      this.state.addPlayer(player);
+      if (!this.state.players.has(player.sessionId)) {
+        this.state.addPlayer(player);
+      }
     });
 
     // Create and shuffle deck
@@ -34,7 +40,7 @@ export class SnapEngine implements IGameEngine<SnapGameState> {
     const playerIds = players.map((p) => p.sessionId);
     const hands = this.dealCards(deck, playerIds);
 
-    // Initialize player hands
+    // Initialize player hands directly in the state
     playerIds.forEach((sessionId) => {
       const cards = hands.get(sessionId) || [];
       const snapCards = cards.map((card) => new SnapCard(card.suit, card.rank));

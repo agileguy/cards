@@ -4,7 +4,7 @@ import { createCard, createCardBack, clearCards, animateCardDeal, animateSnap } 
 // Get URL parameters
 const params = new URLSearchParams(window.location.search);
 const matchId = params.get('matchId');
-const sessionId = params.get('session');
+const playerName = params.get('name') || 'Player';
 
 // Initialize game client
 const client = new GameClient();
@@ -80,16 +80,29 @@ function updatePlayerNames() {
  * Update hand sizes
  */
 function updateHandSizes() {
-  if (!gameState) return;
+  if (!gameState || !gameState.playerHands) {
+    console.log('⚠️ Cannot update hand sizes - no game state or player hands');
+    return;
+  }
 
-  const myHandSize = gameState.getHandSize ? gameState.getHandSize(mySessionId) : 0;
+  console.log('Updating hand sizes...');
+  console.log('Player hands:', gameState.playerHands);
+  console.log('My session ID:', mySessionId);
+
+  // Get my hand size
+  const myHand = gameState.playerHands.get(mySessionId);
+  const myHandSize = myHand ? myHand.cards.length : 0;
+  console.log('My hand:', myHand, 'size:', myHandSize);
   playerHandSizeEl.textContent = `${myHandSize} cards`;
 
+  // Get opponent
   const players = Array.from(gameState.players.values());
   const opponent = players.find(p => p.sessionId !== mySessionId);
 
   if (opponent) {
-    const opponentHandSize = gameState.getHandSize ? gameState.getHandSize(opponent.sessionId) : 0;
+    const opponentHand = gameState.playerHands.get(opponent.sessionId);
+    const opponentHandSize = opponentHand ? opponentHand.cards.length : 0;
+    console.log('Opponent hand:', opponentHand, 'size:', opponentHandSize);
     opponentHandSizeEl.textContent = `${opponentHandSize} cards`;
   }
 }
@@ -214,56 +227,147 @@ snapBtn.addEventListener('click', () => {
  * Initialize game
  */
 async function initGame() {
+  console.log('=== GAME.JS INITIALIZING ===');
+  console.log('Match ID:', matchId);
+  console.log('Player Name:', playerName);
+
   if (!matchId) {
+    console.error('No match ID provided');
     showError('No match ID provided');
     return;
   }
 
   try {
-    console.log('=== JOINING GAME ===');
-    console.log('Match ID:', matchId);
+    console.log('Setting initial connection status to disconnected');
     updateConnectionStatus(false);
 
-    // Join the matched game room by ID
-    currentRoom = await client.joinGame(matchId);
+    console.log('Calling client.joinGame with name:', playerName);
+    currentRoom = await client.joinGame(matchId, playerName);
     mySessionId = currentRoom.sessionId;
+
+    console.log('✓ Successfully joined game!');
+    console.log('  - Session ID:', currentRoom.sessionId);
+    console.log('  - Room ID:', currentRoom.roomId);
+    console.log('  - Initial state:', currentRoom.state);
+
     updateConnectionStatus(true);
+    console.log('Connection status updated to connected');
 
-    console.log('✓ Joined game:', currentRoom.sessionId);
-    console.log('Room ID:', currentRoom.roomId);
+    // Set up state change listeners
+    console.log('Setting up state change listeners...');
 
-    // Listen for state changes
-    currentRoom.state.onChange = () => {
-      gameState = currentRoom.state;
+    // Use a simpler approach - listen to the whole state change
+    currentRoom.onStateChange((state) => {
+      console.log('🔄 State changed');
+      gameState = state;
       updateUI();
-    };
-
-    // Listen for specific properties
-    currentRoom.state.listen('centralPile', () => {
-      updateCentralPile();
     });
 
-    currentRoom.state.listen('currentTurn', () => {
-      updateTurnIndicator();
-      updateActionButtons();
-    });
-
-    currentRoom.state.listen('status', (value) => {
-      if (value === 'completed') {
-        const winnerId = currentRoom.state.winner;
-        showGameOver(winnerId);
+    // Try setting up field-specific listeners with error handling
+    try {
+      if (currentRoom.state.hasOwnProperty('currentTurn')) {
+        currentRoom.state.listen('currentTurn', (value) => {
+          console.log('🎯 Turn changed to:', value);
+          gameState = currentRoom.state;
+          updateTurnIndicator();
+          updateActionButtons();
+        });
       }
-    });
+    } catch (e) {
+      console.warn('Could not set up currentTurn listener:', e);
+    }
+
+    try {
+      if (currentRoom.state.hasOwnProperty('snapAvailable')) {
+        currentRoom.state.listen('snapAvailable', (value) => {
+          console.log('⚡ Snap available changed to:', value);
+          gameState = currentRoom.state;
+          updateActionButtons();
+        });
+      }
+    } catch (e) {
+      console.warn('Could not set up snapAvailable listener:', e);
+    }
+
+    // Listen for changes to the central pile array
+    if (currentRoom.state.centralPile) {
+      currentRoom.state.centralPile.onAdd = (card, index) => {
+        console.log('🃏 Card added to pile at index', index, ':', card);
+        gameState = currentRoom.state;
+        updateCentralPile();
+        updateHandSizes();
+      };
+
+      currentRoom.state.centralPile.onRemove = (card, index) => {
+        console.log('🗑️ Card removed from pile at index', index);
+        gameState = currentRoom.state;
+        updateCentralPile();
+        updateHandSizes();
+      };
+    }
+
+    // Listen for player hand map changes (when hands are added)
+    if (currentRoom.state.playerHands) {
+      currentRoom.state.playerHands.onAdd = (hand, sessionId) => {
+        console.log('👋 Hand added for player:', sessionId, 'with', hand.cards.length, 'cards');
+        gameState = currentRoom.state;
+
+        // Set up listener for this hand's cards array
+        if (hand.cards) {
+          hand.cards.onAdd = (card, index) => {
+            console.log('🃏 Card added to', sessionId, 'hand at index', index);
+            gameState = currentRoom.state;
+            updateHandSizes();
+          };
+
+          hand.cards.onRemove = (card, index) => {
+            console.log('🗑️ Card removed from', sessionId, 'hand at index', index);
+            gameState = currentRoom.state;
+            updateHandSizes();
+          };
+        }
+
+        updateHandSizes();
+      };
+    }
+
+    console.log('✓ State listeners set up');
+
+    // Wait for state to fully sync, then set up listeners for existing hands
+    setTimeout(() => {
+      console.log('Setting up listeners for existing hands...');
+      console.log('PlayerHands:', currentRoom.state.playerHands);
+
+      if (currentRoom.state.playerHands) {
+        currentRoom.state.playerHands.forEach((hand, sessionId) => {
+          console.log('📋 Setting up listener for existing hand:', sessionId, 'with', hand?.cards?.length || 0, 'cards');
+
+          if (hand && hand.cards) {
+            hand.cards.onAdd = (card, index) => {
+              console.log('🃏 Card added to', sessionId, 'hand at index', index);
+              gameState = currentRoom.state;
+              updateHandSizes();
+            };
+
+            hand.cards.onRemove = (card, index) => {
+              console.log('🗑️ Card removed from', sessionId, 'hand at index', index);
+              gameState = currentRoom.state;
+              updateHandSizes();
+            };
+          }
+        });
+      }
+    }, 200);
 
     // Listen for game messages
     currentRoom.onMessage('card_played', (message) => {
-      console.log('Card played:', message);
+      console.log('Card played message:', message);
       statusMessage.textContent = `Card played by ${message.playerId === mySessionId ? 'you' : 'opponent'}`;
       updateUI();
     });
 
     currentRoom.onMessage('snap_success', (message) => {
-      console.log('Successful snap:', message);
+      console.log('Snap success message:', message);
       const isMe = message.playerId === mySessionId;
       statusMessage.textContent = isMe ? 'You got the pile!' : 'Opponent got the pile!';
       animateSnap(centralPile);
@@ -271,14 +375,14 @@ async function initGame() {
     });
 
     currentRoom.onMessage('snap_fail', (message) => {
-      console.log('Failed snap:', message);
+      console.log('Snap fail message:', message);
       const isMe = message.playerId === mySessionId;
       statusMessage.textContent = isMe ? 'Wrong! Penalty card lost' : 'Opponent snapped wrong!';
       updateUI();
     });
 
     currentRoom.onMessage('error', (message) => {
-      console.error('Game error:', message);
+      console.error('Game error message:', message);
       showError(message.message || 'An error occurred');
     });
 
@@ -289,7 +393,7 @@ async function initGame() {
     });
 
     currentRoom.onLeave((code) => {
-      console.log('Left room:', code);
+      console.log('Left room with code:', code);
       updateConnectionStatus(false);
 
       if (code > 1000) {
@@ -297,16 +401,31 @@ async function initGame() {
       }
     });
 
-    // Initial state
+    // Set initial game state
+    console.log('Setting initial game state');
     gameState = currentRoom.state;
+    console.log('Initial game state:', {
+      status: gameState?.status,
+      players: gameState?.players ? gameState.players.size : 0,
+      currentTurn: gameState?.currentTurn,
+      pileSize: gameState?.centralPile ? gameState.centralPile.length : 0
+    });
+
+    // Initial UI update
+    console.log('Performing initial UI update');
     updateUI();
 
   } catch (error) {
-    console.error('Failed to join game:', error);
+    console.error('❌ Failed to join game:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     showError('Failed to connect to game. Please try again.');
     updateConnectionStatus(false);
   }
 }
+
+console.log('=== GAME.JS LOADED ===');
 
 // Initialize when page loads
 initGame();

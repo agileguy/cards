@@ -46,14 +46,19 @@ export class GameClient {
   }
 
   /**
-   * Join a specific game room by ID
+   * Join a specific game room by ID (or name for matchmaking)
    */
-  async joinGame(roomId) {
+  async joinGame(roomId, playerName) {
     if (!this.ready) {
       await this.initialize();
     }
 
-    this.currentRoom = await this.client.joinById(roomId);
+    // Use joinOrCreate with the matchId as the room name
+    // This allows both players to join the same private room
+    this.currentRoom = await this.client.joinOrCreate('snap', {
+      matchId: roomId,
+      name: playerName || 'Player',
+    });
     return this.currentRoom;
   }
 

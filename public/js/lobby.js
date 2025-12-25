@@ -111,8 +111,9 @@ joinForm.addEventListener('submit', async (e) => {
     currentRoom.onMessage('matched', (message) => {
       console.log('Matched!', message);
 
-      // Redirect to game page with match ID
-      const gameUrl = `/game.html?matchId=${message.matchId}&session=${currentRoom.sessionId}`;
+      // Redirect to game page with match ID and player name
+      const gameUrl = `/game.html?matchId=${message.matchId}&name=${encodeURIComponent(playerName)}`;
+      console.log('Redirecting to:', gameUrl);
       window.location.href = gameUrl;
     });
 

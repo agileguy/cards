@@ -22,15 +22,15 @@ export class SnapRoom extends GameRoom<SnapGameState> {
       players: Array.from(this.state.players.keys()),
     });
 
-    // Initialize game with players
+    // Pass the room's state to the engine to initialize in place
+    // This avoids schema ownership issues
     const players = Array.from(this.state.players.values());
-    const newState = this.gameEngine.initialize(players);
 
-    // Copy initialized state to room state
-    this.state.centralPile = newState.centralPile;
-    this.state.playerHands = newState.playerHands;
-    this.state.currentTurn = newState.currentTurn;
-    this.state.snapAvailable = newState.snapAvailable;
+    // Give the engine access to our state
+    (this.gameEngine as any).state = this.state;
+
+    // Initialize will modify this.state directly
+    this.gameEngine.initialize(players);
 
     // Set up message handlers for snap-specific actions
     this.onMessage('play_card', (client, message) => {

@@ -1,74 +1,122 @@
-# Cards
+# Cards - Two Player Card Game Server
 
-A Node.js project managed with Claude Code following test-driven development practices.
+A multiplayer card game server using Colyseus framework with TypeScript, Docker, and comprehensive observability.
+
+## Features
+
+- TypeScript-based Colyseus game server
+- Docker-first development environment
+- Prometheus metrics and Grafana dashboards
+- Test-driven development with comprehensive test coverage
+- Card and Deck utilities for building card games
 
 ## Prerequisites
 
-- Node.js >= 18.x
-- - npm >= 9.x
- 
-  - ## Installation
- 
-  - ```bash
-    git clone https://github.com/agileguy/cards.git
-    cd cards
-    npm install
-    ```
+- Docker >= 20.x
+- Docker Compose >= 2.x
+- Node.js >= 18.x (for local development)
 
-    ## Usage
+## Quick Start
 
-    ```bash
-    npm start
-    ```
+```bash
+# Clone the repository
+git clone https://github.com/agileguy/cards.git
+cd cards
 
-    ## Development
+# Start the entire system (server + observability)
+docker compose up
 
-    This project follows a strict test-first development methodology. See [TESTING.md](./TESTING.md) for our testing philosophy and guidelines.
+# The following services will be available:
+# - Game Server: http://localhost:2567
+# - Prometheus: http://localhost:9090
+# - Grafana: http://localhost:3000 (admin/admin)
+# - Colyseus Monitor: http://localhost:2567/colyseus
+# - Metrics: http://localhost:2567/metrics
+# - Health Check: http://localhost:2567/health
+```
 
-    ### Running Tests
+## Development
 
-    ```bash
-    # Run all tests
-    npm test
+### Running Tests
 
-    # Run tests in watch mode
-    npm run test:watch
+```bash
+# Run all tests in Docker
+docker compose run test
 
-    # Run tests with coverage
-    npm run test:coverage
-    ```
+# Run tests in watch mode
+docker compose run test npm run test:watch
 
-    ### Linting
+# Run tests with coverage
+docker compose run test npm run test:coverage
+```
 
-    ```bash
-    npm run lint
-    npm run lint:fix
-    ```
+### Local Development (without Docker)
 
-    ## Project Structure
+```bash
+npm install
+npm run start:dev    # Start with hot reload
+npm test            # Run tests
+npm run build       # Build TypeScript
+```
 
-    ```
-    cards/
-    ├── src/              # Source code
-    ├── tests/            # Test files
-    ├── .github/          # GitHub Actions workflows
-    ├── CLAUDE.md         # Claude Code guidelines
-    ├── TESTING.md        # Testing documentation
-    ├── CHANGELOG.md      # Version history
-    └── package.json      # Project configuration
-    ```
+## Project Structure
 
-    ## Versioning
+```
+cards/
+├── src/
+│   ├── server/
+│   │   ├── index.ts          # Server entry point
+│   │   └── config.ts         # Configuration
+│   └── utils/
+│       ├── Card.ts           # Card class
+│       ├── Deck.ts           # Deck class
+│       └── metrics.ts        # Prometheus metrics
+├── tests/
+│   ├── unit/                 # Unit tests
+│   └── integration/          # Integration tests
+├── docker-compose.yml        # Multi-service orchestration
+├── Dockerfile                # Multi-stage build
+├── prometheus.yml            # Prometheus config
+└── grafana/                  # Grafana provisioning
+```
 
-    This project uses [Semantic Versioning](https://semver.org/). See [CHANGELOG.md](./CHANGELOG.md) for release history.
+## Observability
 
-    ## Contributing
+### Metrics
 
-    1. Write tests first (TDD approach)
-    2. 2. Ensure all tests pass
-       3. 3. Follow existing code style
-          4. 4. Update documentation as needed
-            
-             5. ## License
-            
-             6. ISC
+The server exposes Prometheus metrics at `/metrics`:
+
+- `cards_connections_total` - Total connections
+- `cards_connections_active` - Active connections
+- `cards_rooms_total` - Total rooms created
+- `cards_rooms_active` - Active rooms
+- `cards_room_players` - Players per room (histogram)
+- `cards_games_started_total` - Games started
+- `cards_games_completed_total` - Games completed
+- `cards_game_duration_seconds` - Game duration (histogram)
+- `cards_message_latency_seconds` - Message latency (histogram)
+
+### Grafana Dashboards
+
+Access Grafana at http://localhost:3000 (admin/admin) to visualize metrics.
+
+## API Endpoints
+
+- `GET /health` - Health check
+- `GET /metrics` - Prometheus metrics
+- `GET /colyseus` - Colyseus monitor dashboard
+
+## Testing Philosophy
+
+This project follows strict **Test-Driven Development (TDD)**. See [TESTING.md](./TESTING.md) for details.
+
+## Contributing
+
+1. Write tests first (TDD approach)
+2. Ensure all tests pass in Docker
+3. Follow existing code style
+4. Update documentation
+
+## License
+
+ISC

@@ -1,0 +1,24 @@
+module.exports = {
+    env: {
+          node: true,
+          es2021: true,
+          jest: true,
+    },
+    extends: [
+          'eslint:recommended',
+          'plugin:jest/recommended',
+          'prettier',
+        ],
+    parserOptions: {
+          ecmaVersion: 'latest',
+          sourceType: 'module',
+    },
+    plugins: ['jest'],
+    rules: {
+          'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+          'no-console': 'warn',
+          'prefer-const': 'error',
+          'eqeqeq': ['error', 'always'],
+          'curly': ['error', 'all'],
+    },
+};

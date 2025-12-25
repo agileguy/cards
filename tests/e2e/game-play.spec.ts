@@ -22,14 +22,18 @@ test.describe('Game Play Flow', () => {
     await page.goto('/game.html?matchId=test-match-2');
 
     // Should show connected status after joining
-    await expect(page.locator('.status-text')).toContainText('Connected', { timeout: 5000 });
+    await expect(page.locator('.status-text')).toContainText('Connected', {
+      timeout: 5000,
+    });
   });
 
   test('displays player names and hand sizes', async ({ page }) => {
     await page.goto('/game.html?matchId=test-match-3');
 
     // Wait for connection
-    await expect(page.locator('.status-text')).toContainText('Connected', { timeout: 5000 });
+    await expect(page.locator('.status-text')).toContainText('Connected', {
+      timeout: 5000,
+    });
 
     // Should show player name elements
     await expect(page.locator('.player-name')).toBeVisible();
@@ -44,7 +48,9 @@ test.describe('Game Play Flow', () => {
     await page.goto('/game.html?matchId=test-match-4');
 
     // Wait for connection
-    await expect(page.locator('.status-text')).toContainText('Connected', { timeout: 5000 });
+    await expect(page.locator('.status-text')).toContainText('Connected', {
+      timeout: 5000,
+    });
 
     // Should show action buttons
     await expect(page.locator('#playCardBtn')).toBeVisible();
@@ -55,7 +61,9 @@ test.describe('Game Play Flow', () => {
     await page.goto('/game.html?matchId=test-match-5');
 
     // Wait for connection
-    await expect(page.locator('.status-text')).toContainText('Connected', { timeout: 5000 });
+    await expect(page.locator('.status-text')).toContainText('Connected', {
+      timeout: 5000,
+    });
 
     // Should show turn indicator
     await expect(page.locator('.turn-indicator')).toBeVisible();
@@ -65,7 +73,9 @@ test.describe('Game Play Flow', () => {
     await page.goto('/game.html?matchId=test-match-6');
 
     // Wait for connection
-    await expect(page.locator('.status-text')).toContainText('Connected', { timeout: 5000 });
+    await expect(page.locator('.status-text')).toContainText('Connected', {
+      timeout: 5000,
+    });
 
     // Buttons should be disabled until game starts
     // (In real game, they'd be enabled when it's player's turn)
@@ -100,17 +110,24 @@ test.describe('Two Player Game Flow', () => {
       await expect(page2.locator('.lobby-info')).toBeVisible({ timeout: 5000 });
 
       // Both should be redirected to game page
-      await expect(page1).toHaveURL(/\/game\.html\?matchId=/, { timeout: 10000 });
-      await expect(page2).toHaveURL(/\/game\.html\?matchId=/, { timeout: 10000 });
+      await expect(page1).toHaveURL(/\/game\.html\?matchId=/, {
+        timeout: 10000,
+      });
+      await expect(page2).toHaveURL(/\/game\.html\?matchId=/, {
+        timeout: 10000,
+      });
 
       // Both should show connected
-      await expect(page1.locator('.status-text')).toContainText('Connected', { timeout: 5000 });
-      await expect(page2.locator('.status-text')).toContainText('Connected', { timeout: 5000 });
+      await expect(page1.locator('.status-text')).toContainText('Connected', {
+        timeout: 5000,
+      });
+      await expect(page2.locator('.status-text')).toContainText('Connected', {
+        timeout: 5000,
+      });
 
       // Both should show opponent name
       await expect(page1.locator('.opponent-name')).toBeVisible();
       await expect(page2.locator('.opponent-name')).toBeVisible();
-
     } finally {
       await context1.close();
       await context2.close();
@@ -134,13 +151,22 @@ test.describe('Two Player Game Flow', () => {
       await page2.click('button[type="submit"]');
 
       // Wait for match and redirect
-      await expect(page1).toHaveURL(/\/game\.html\?matchId=/, { timeout: 10000 });
-      await expect(page2).toHaveURL(/\/game\.html\?matchId=/, { timeout: 10000 });
+      await expect(page1).toHaveURL(/\/game\.html\?matchId=/, {
+        timeout: 10000,
+      });
+      await expect(page2).toHaveURL(/\/game\.html\?matchId=/, {
+        timeout: 10000,
+      });
 
       // Hand sizes should be visible and non-zero
-      await expect(page1.locator('.player-area .hand-size')).toContainText(/\d+ cards/, { timeout: 5000 });
-      await expect(page2.locator('.player-area .hand-size')).toContainText(/\d+ cards/, { timeout: 5000 });
-
+      await expect(page1.locator('.player-area .hand-size')).toContainText(
+        /\d+ cards/,
+        { timeout: 5000 }
+      );
+      await expect(page2.locator('.player-area .hand-size')).toContainText(
+        /\d+ cards/,
+        { timeout: 5000 }
+      );
     } finally {
       await context1.close();
       await context2.close();
@@ -164,17 +190,25 @@ test.describe('Two Player Game Flow', () => {
       await page2.click('button[type="submit"]');
 
       // Wait for match
-      await expect(page1).toHaveURL(/\/game\.html\?matchId=/, { timeout: 10000 });
-      await expect(page2).toHaveURL(/\/game\.html\?matchId=/, { timeout: 10000 });
+      await expect(page1).toHaveURL(/\/game\.html\?matchId=/, {
+        timeout: 10000,
+      });
+      await expect(page2).toHaveURL(/\/game\.html\?matchId=/, {
+        timeout: 10000,
+      });
 
       // One should see "Your turn", one should see "Opponent's turn"
-      const turn1 = await page1.locator('.turn-indicator').textContent({ timeout: 5000 });
-      const turn2 = await page2.locator('.turn-indicator').textContent({ timeout: 5000 });
+      const turn1 = await page1
+        .locator('.turn-indicator')
+        .textContent({ timeout: 5000 });
+      const turn2 = await page2
+        .locator('.turn-indicator')
+        .textContent({ timeout: 5000 });
 
       // Exactly one should have "Your turn"
-      const hasYourTurn = turn1?.includes('Your turn') || turn2?.includes('Your turn');
+      const hasYourTurn =
+        turn1?.includes('Your turn') || turn2?.includes('Your turn');
       expect(hasYourTurn).toBe(true);
-
     } finally {
       await context1.close();
       await context2.close();
@@ -198,14 +232,20 @@ test.describe('Two Player Game Flow', () => {
       await page2.click('button[type="submit"]');
 
       // Wait for match
-      await expect(page1).toHaveURL(/\/game\.html\?matchId=/, { timeout: 10000 });
-      await expect(page2).toHaveURL(/\/game\.html\?matchId=/, { timeout: 10000 });
+      await expect(page1).toHaveURL(/\/game\.html\?matchId=/, {
+        timeout: 10000,
+      });
+      await expect(page2).toHaveURL(/\/game\.html\?matchId=/, {
+        timeout: 10000,
+      });
 
       // Wait for game to be ready
       await page1.waitForTimeout(1000);
 
       // Find whose turn it is
-      const turn1 = await page1.locator('.turn-indicator').textContent({ timeout: 5000 });
+      const turn1 = await page1
+        .locator('.turn-indicator')
+        .textContent({ timeout: 5000 });
       const isPlayer1Turn = turn1?.includes('Your turn');
 
       const currentPlayer = isPlayer1Turn ? page1 : page2;
@@ -218,11 +258,17 @@ test.describe('Two Player Game Flow', () => {
       await playCardBtn.click();
 
       // Should show status message
-      await expect(currentPlayer.locator('.status-message')).toContainText(/Playing card|Card played/, { timeout: 3000 });
+      await expect(currentPlayer.locator('.status-message')).toContainText(
+        /Playing card|Card played/,
+        { timeout: 3000 }
+      );
 
       // Central pile should have cards
-      await expect(currentPlayer.locator('.central-pile .card, .central-pile .pile-placeholder')).toBeVisible({ timeout: 3000 });
-
+      await expect(
+        currentPlayer.locator(
+          '.central-pile .card, .central-pile .pile-placeholder'
+        )
+      ).toBeVisible({ timeout: 3000 });
     } finally {
       await context1.close();
       await context2.close();
@@ -245,17 +291,26 @@ test.describe('Two Player Game Flow', () => {
       await page2.fill('#playerName', 'PilePlayer2');
       await page2.click('button[type="submit"]');
 
-      await expect(page1).toHaveURL(/\/game\.html\?matchId=/, { timeout: 10000 });
-      await expect(page2).toHaveURL(/\/game\.html\?matchId=/, { timeout: 10000 });
+      await expect(page1).toHaveURL(/\/game\.html\?matchId=/, {
+        timeout: 10000,
+      });
+      await expect(page2).toHaveURL(/\/game\.html\?matchId=/, {
+        timeout: 10000,
+      });
 
       // Central pile should be visible
-      await expect(page1.locator('.central-pile')).toBeVisible({ timeout: 5000 });
-      await expect(page2.locator('.central-pile')).toBeVisible({ timeout: 5000 });
+      await expect(page1.locator('.central-pile')).toBeVisible({
+        timeout: 5000,
+      });
+      await expect(page2.locator('.central-pile')).toBeVisible({
+        timeout: 5000,
+      });
 
       // Initially should show "No cards played yet" or be empty
-      const pileContent1 = await page1.locator('.central-pile').textContent({ timeout: 3000 });
+      const pileContent1 = await page1
+        .locator('.central-pile')
+        .textContent({ timeout: 3000 });
       expect(pileContent1).toBeTruthy();
-
     } finally {
       await context1.close();
       await context2.close();
@@ -276,7 +331,9 @@ test.describe('Game Over', () => {
     await page.goto('/game.html?matchId=test-gameover-2');
 
     // Wait for connection
-    await expect(page.locator('.status-text')).toContainText('Connected', { timeout: 5000 });
+    await expect(page.locator('.status-text')).toContainText('Connected', {
+      timeout: 5000,
+    });
 
     // Game over elements should exist
     await expect(page.locator('.game-over .result')).toBeAttached();
@@ -289,7 +346,9 @@ test.describe('Error Handling', () => {
     await page.goto('/game.html?matchId=test-error-1');
 
     // Error message element should exist
-    await expect(page.locator('.error-message')).toBeAttached({ timeout: 5000 });
+    await expect(page.locator('.error-message')).toBeAttached({
+      timeout: 5000,
+    });
   });
 
   test('handles missing matchId gracefully', async ({ page }) => {

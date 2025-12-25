@@ -1,4 +1,9 @@
-import { IGameEngine, GameAction, ActionResult, ValidationResult } from '../IGameEngine';
+import {
+  IGameEngine,
+  GameAction,
+  ActionResult,
+  ValidationResult,
+} from '../IGameEngine';
 import { SnapGameState, SnapCard } from '../../schemas/SnapGameState';
 import { GamePlayer } from '../../schemas/GamePlayer';
 import { Deck } from '../../utils/Deck';
@@ -86,7 +91,10 @@ export class SnapEngine implements IGameEngine<SnapGameState> {
   /**
    * Process a game action
    */
-  processAction(state: SnapGameState, action: GameAction): ActionResult<SnapGameState> {
+  processAction(
+    state: SnapGameState,
+    action: GameAction
+  ): ActionResult<SnapGameState> {
     log('Processing action', { type: action.type, playerId: action.playerId });
 
     if (action.type === 'PLAY_CARD') {
@@ -107,7 +115,10 @@ export class SnapEngine implements IGameEngine<SnapGameState> {
   /**
    * Handle playing a card
    */
-  private handlePlayCard(state: SnapGameState, playerId: string): ActionResult<SnapGameState> {
+  private handlePlayCard(
+    state: SnapGameState,
+    playerId: string
+  ): ActionResult<SnapGameState> {
     const hand = state.playerHands.get(playerId);
 
     if (!hand || hand.length === 0) {
@@ -150,7 +161,10 @@ export class SnapEngine implements IGameEngine<SnapGameState> {
   /**
    * Handle snap attempt
    */
-  private handleSnap(state: SnapGameState, playerId: string): ActionResult<SnapGameState> {
+  private handleSnap(
+    state: SnapGameState,
+    playerId: string
+  ): ActionResult<SnapGameState> {
     const result = state.handleSnap(playerId);
 
     if (result.success) {

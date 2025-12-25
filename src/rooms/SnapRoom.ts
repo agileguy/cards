@@ -42,8 +42,12 @@ export class SnapRoom extends GameRoom<SnapGameState> {
     });
 
     log('Game started, cards dealt, message handlers registered:', {
-      player1Hand: players[0] ? this.state.getHandSize(players[0].sessionId) : 0,
-      player2Hand: players[1] ? this.state.getHandSize(players[1].sessionId) : 0,
+      player1Hand: players[0]
+        ? this.state.getHandSize(players[0].sessionId)
+        : 0,
+      player2Hand: players[1]
+        ? this.state.getHandSize(players[1].sessionId)
+        : 0,
       currentTurn: this.state.currentTurn,
     });
   }

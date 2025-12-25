@@ -114,7 +114,8 @@ describe('GamePlayer', () => {
       const player1 = new GamePlayer('session-1', 'Alice');
 
       // Small delay
-      const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+      const delay = (ms: number) =>
+        new Promise((resolve) => setTimeout(resolve, ms));
       return delay(10).then(() => {
         const player2 = new GamePlayer('session-2', 'Bob');
 

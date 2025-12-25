@@ -29,7 +29,10 @@ class MockGameEngine implements IGameEngine<MockGameState> {
     return this.state;
   }
 
-  processAction(state: MockGameState, action: GameAction): ActionResult<MockGameState> {
+  processAction(
+    state: MockGameState,
+    action: GameAction
+  ): ActionResult<MockGameState> {
     const newState = state;
 
     if (action.type === 'START_GAME') {

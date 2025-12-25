@@ -7,7 +7,9 @@ import { createLogger } from '../utils/logger';
 
 const log = createLogger('game-room');
 
-export abstract class GameRoom<TState extends BaseGameState> extends Room<TState> {
+export abstract class GameRoom<
+  TState extends BaseGameState,
+> extends Room<TState> {
   protected gameEngine: IGameEngine<TState>;
   protected gameStartTimeout: NodeJS.Timeout | null = null;
 
@@ -92,7 +94,10 @@ export abstract class GameRoom<TState extends BaseGameState> extends Room<TState
     metrics.gamePlayersConnected.inc({ game_type: this.gameType });
 
     // Check if we should start the game
-    if (this.state.players.size >= this.minPlayers && this.state.status === 'waiting') {
+    if (
+      this.state.players.size >= this.minPlayers &&
+      this.state.status === 'waiting'
+    ) {
       this.startGame();
     }
   }
@@ -128,7 +133,10 @@ export abstract class GameRoom<TState extends BaseGameState> extends Room<TState
     metrics.gamePlayersConnected.dec({ game_type: this.gameType });
 
     // If game is in progress and we now have too few players, end the game
-    if (this.state.status === 'playing' && this.state.players.size < this.minPlayers) {
+    if (
+      this.state.status === 'playing' &&
+      this.state.players.size < this.minPlayers
+    ) {
       log('Ending game due to insufficient players:', {
         remainingPlayers: this.state.players.size,
         minPlayers: this.minPlayers,

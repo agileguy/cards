@@ -82,7 +82,9 @@ describe('SnapEngine', () => {
 
       const result = engine.processAction(state, action);
 
-      expect(result.newState.getHandSize('session-1')).toBe(initialHandSize - 1);
+      expect(result.newState.getHandSize('session-1')).toBe(
+        initialHandSize - 1
+      );
     });
 
     it('should fail when player has no cards', () => {
@@ -161,7 +163,9 @@ describe('SnapEngine', () => {
       const result = engine.processAction(state, action);
 
       expect(result.success).toBe(false);
-      expect(result.newState.getHandSize('session-1')).toBe(initialHandSize - 1);
+      expect(result.newState.getHandSize('session-1')).toBe(
+        initialHandSize - 1
+      );
       expect(result.error).toContain('No match');
     });
 

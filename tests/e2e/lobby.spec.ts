@@ -34,7 +34,9 @@ test.describe('Lobby Page', () => {
 
     // HTML5 validation should prevent submission
     const nameInput = page.locator('#playerName');
-    const isValid = await nameInput.evaluate((el: HTMLInputElement) => el.validity.valid);
+    const isValid = await nameInput.evaluate(
+      (el: HTMLInputElement) => el.validity.valid
+    );
     expect(isValid).toBe(false);
   });
 

@@ -9,7 +9,9 @@ test.describe('Keyboard Navigation', () => {
 
     // Should focus on input
     const focusedElement = page.locator(':focus');
-    const tagName = await focusedElement.evaluate(el => el.tagName.toLowerCase());
+    const tagName = await focusedElement.evaluate((el) =>
+      el.tagName.toLowerCase()
+    );
     expect(tagName).toBe('input');
 
     // Type name
@@ -51,8 +53,8 @@ test.describe('Keyboard Navigation', () => {
     await nameInput.focus();
 
     // Should have visible focus indicator
-    const outlineStyle = await nameInput.evaluate(el =>
-      window.getComputedStyle(el).outline
+    const outlineStyle = await nameInput.evaluate(
+      (el) => window.getComputedStyle(el).outline
     );
 
     // Should have some outline (default or custom)
@@ -71,7 +73,9 @@ test.describe('Keyboard Navigation', () => {
     const playBtn = page.locator('#playCardBtn');
     await playBtn.focus();
 
-    const isFocused = await playBtn.evaluate(el => el === document.activeElement);
+    const isFocused = await playBtn.evaluate(
+      (el) => el === document.activeElement
+    );
     expect(isFocused).toBe(true);
   });
 });
@@ -203,8 +207,8 @@ test.describe('Visual Accessibility', () => {
     const heading = page.locator('h1');
     await expect(heading).toBeVisible();
 
-    const color = await heading.evaluate(el =>
-      window.getComputedStyle(el).color
+    const color = await heading.evaluate(
+      (el) => window.getComputedStyle(el).color
     );
     expect(color).toBeTruthy();
 
@@ -233,8 +237,8 @@ test.describe('Visual Accessibility', () => {
     await nameInput.focus();
 
     // Should have some visual focus indicator
-    const outlineWidth = await nameInput.evaluate(el =>
-      window.getComputedStyle(el).outlineWidth
+    const outlineWidth = await nameInput.evaluate(
+      (el) => window.getComputedStyle(el).outlineWidth
     );
 
     expect(outlineWidth).toBeTruthy();
@@ -321,7 +325,7 @@ test.describe('Mobile Accessibility', () => {
 
     // Font size should be readable (at least 14px base)
     const body = page.locator('body');
-    const fontSize = await body.evaluate(el =>
+    const fontSize = await body.evaluate((el) =>
       parseInt(window.getComputedStyle(el).fontSize)
     );
 

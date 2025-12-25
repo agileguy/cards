@@ -6,7 +6,9 @@ test.describe('Network Error Handling', () => {
     await page.goto('/game.html?matchId=test-1');
 
     // Error message element should exist
-    await expect(page.locator('.error-message')).toBeAttached({ timeout: 5000 });
+    await expect(page.locator('.error-message')).toBeAttached({
+      timeout: 5000,
+    });
   });
 
   test('handles connection timeout gracefully', async ({ page }) => {
@@ -17,13 +19,18 @@ test.describe('Network Error Handling', () => {
     await expect(statusIndicator).toBeVisible({ timeout: 10000 });
   });
 
-  test('reconnects after temporary disconnection', async ({ page, context }) => {
+  test('reconnects after temporary disconnection', async ({
+    page,
+    context,
+  }) => {
     await page.goto('/lobby.html');
     await page.fill('#playerName', 'ReconnectTest');
     await page.click('button[type="submit"]');
 
     // Wait for connection
-    await expect(page.locator('.status-text')).toContainText('Connected', { timeout: 5000 });
+    await expect(page.locator('.status-text')).toContainText('Connected', {
+      timeout: 5000,
+    });
 
     // Simulate network disconnection by going offline
     await context.setOffline(true);
@@ -48,7 +55,9 @@ test.describe('Lobby Error Handling', () => {
 
     // HTML5 validation should prevent submission
     const nameInput = page.locator('#playerName');
-    const isValid = await nameInput.evaluate((el: HTMLInputElement) => el.validity.valid);
+    const isValid = await nameInput.evaluate(
+      (el: HTMLInputElement) => el.validity.valid
+    );
     expect(isValid).toBe(false);
   });
 
@@ -69,7 +78,9 @@ test.describe('Lobby Error Handling', () => {
     await page.click('button[type="submit"]');
 
     // Should handle errors gracefully
-    await expect(page.locator('.lobby-info, .join-form')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.lobby-info, .join-form')).toBeVisible({
+      timeout: 10000,
+    });
 
     // Error element should exist
     await expect(page.locator('.error-message')).toBeAttached();
@@ -177,8 +188,8 @@ test.describe('Error Message Display', () => {
     await expect(errorMsg).toBeAttached();
 
     // Error message should have proper styling
-    const bgColor = await errorMsg.evaluate(el =>
-      window.getComputedStyle(el).backgroundColor
+    const bgColor = await errorMsg.evaluate(
+      (el) => window.getComputedStyle(el).backgroundColor
     );
     expect(bgColor).toBeTruthy();
   });
@@ -189,7 +200,9 @@ test.describe('Error Message Display', () => {
     // Trigger multiple errors via script
     await page.evaluate(() => {
       const showError = (msg: string) => {
-        const errorMsg = document.querySelector('.error-message') as HTMLElement;
+        const errorMsg = document.querySelector(
+          '.error-message'
+        ) as HTMLElement;
         if (errorMsg) {
           errorMsg.textContent = msg;
           errorMsg.classList.add('active');
@@ -217,7 +230,9 @@ test.describe('Connection Status', () => {
     await page.click('button[type="submit"]');
 
     // Should show connected
-    await expect(page.locator('.status-text')).toContainText('Connected', { timeout: 5000 });
+    await expect(page.locator('.status-text')).toContainText('Connected', {
+      timeout: 5000,
+    });
   });
 
   test('connection indicator has visual feedback', async ({ page }) => {
@@ -227,7 +242,7 @@ test.describe('Connection Status', () => {
     await expect(statusIndicator).toBeVisible();
 
     // Should not have connected class initially
-    const hasConnected = await statusIndicator.evaluate(el =>
+    const hasConnected = await statusIndicator.evaluate((el) =>
       el.classList.contains('connected')
     );
     expect(hasConnected).toBe(false);
@@ -240,7 +255,7 @@ test.describe('Connection Status', () => {
     // Should have connected class
     const statusText = await page.locator('.status-text').textContent();
     if (statusText?.includes('Connected')) {
-      const hasConnectedNow = await statusIndicator.evaluate(el =>
+      const hasConnectedNow = await statusIndicator.evaluate((el) =>
         el.classList.contains('connected')
       );
       expect(hasConnectedNow).toBe(true);
@@ -253,7 +268,9 @@ test.describe('Connection Status', () => {
     await page.click('button[type="submit"]');
 
     // Wait for connection
-    await expect(page.locator('.status-text')).toContainText('Connected', { timeout: 5000 });
+    await expect(page.locator('.status-text')).toContainText('Connected', {
+      timeout: 5000,
+    });
 
     // Simulate disconnection
     await context.setOffline(true);

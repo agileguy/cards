@@ -14,7 +14,9 @@ test.describe('Lobby Flow', () => {
     await expect(page.locator('.lobby-info')).toBeVisible({ timeout: 5000 });
 
     // Should show connection status
-    await expect(page.locator('.status-text')).toContainText('Connected', { timeout: 5000 });
+    await expect(page.locator('.status-text')).toContainText('Connected', {
+      timeout: 5000,
+    });
 
     // Should hide the form
     await expect(page.locator('.join-form')).not.toBeVisible();
@@ -28,7 +30,9 @@ test.describe('Lobby Flow', () => {
 
     // HTML5 validation should prevent submission
     const nameInput = page.locator('#playerName');
-    const isInvalid = await nameInput.evaluate((el: HTMLInputElement) => !el.validity.valid);
+    const isInvalid = await nameInput.evaluate(
+      (el: HTMLInputElement) => !el.validity.valid
+    );
     expect(isInvalid).toBe(true);
   });
 
@@ -67,8 +71,12 @@ test.describe('Lobby Flow', () => {
       await expect(page2.locator('.lobby-info')).toBeVisible({ timeout: 5000 });
 
       // Both should be redirected to game page
-      await expect(page1).toHaveURL(/\/game\.html\?matchId=/, { timeout: 10000 });
-      await expect(page2).toHaveURL(/\/game\.html\?matchId=/, { timeout: 10000 });
+      await expect(page1).toHaveURL(/\/game\.html\?matchId=/, {
+        timeout: 10000,
+      });
+      await expect(page2).toHaveURL(/\/game\.html\?matchId=/, {
+        timeout: 10000,
+      });
 
       // Both should have the same match ID
       const url1 = new URL(page1.url());
@@ -78,7 +86,6 @@ test.describe('Lobby Flow', () => {
 
       expect(matchId1).toBeTruthy();
       expect(matchId1).toBe(matchId2);
-
     } finally {
       await context1.close();
       await context2.close();
@@ -115,6 +122,8 @@ test.describe('Lobby Navigation', () => {
     await page.fill('#playerName', 'StatusTest');
     await page.click('button[type="submit"]');
 
-    await expect(page.locator('.status-text')).toContainText('Connected', { timeout: 5000 });
+    await expect(page.locator('.status-text')).toContainText('Connected', {
+      timeout: 5000,
+    });
   });
 });

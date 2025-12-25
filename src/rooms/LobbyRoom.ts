@@ -4,6 +4,7 @@ import { Player } from '../schemas/Player';
 import { Matchmaker } from '../utils/Matchmaker';
 import { metrics } from '../utils/metrics';
 import { createLogger } from '../utils/logger';
+import { config } from '../server/config';
 
 const log = createLogger('lobby');
 
@@ -19,7 +20,10 @@ export class LobbyRoom extends Room<LobbyState> {
     });
 
     this.setState(new LobbyState());
-    this.matchmaker = new Matchmaker(30000);
+    this.matchmaker = new Matchmaker(config.lobbyTimeoutMs);
+
+    // Set initial metadata
+    this.updateMetadata();
 
     // Set up message handlers
     this.onMessage('join_lobby', (client, message) => {
@@ -30,15 +34,15 @@ export class LobbyRoom extends Room<LobbyState> {
       this.handleLeaveLobby(client);
     });
 
-    // Set up timeout interval (check every 5 seconds)
+    // Set up timeout interval
     this.timeoutInterval = setInterval(() => {
       this.handleTimeouts();
-    }, 5000);
+    }, config.lobbyMatchCheckIntervalMs);
 
     log('onCreate complete:', {
       roomId: this.roomId,
-      matchmakerTimeout: 30000,
-      checkInterval: 5000,
+      matchmakerTimeout: config.lobbyTimeoutMs,
+      checkInterval: config.lobbyMatchCheckIntervalMs,
     });
   }
 
@@ -61,8 +65,9 @@ export class LobbyRoom extends Room<LobbyState> {
       waitingCount: this.state.getWaitingCount(),
     });
 
-    // Update metrics
+    // Update metrics and metadata
     metrics.lobbyPlayersWaiting.set(this.state.getWaitingCount());
+    this.updateMetadata();
   }
 
   onLeave(client: Client, consented: boolean): void {
@@ -96,8 +101,9 @@ export class LobbyRoom extends Room<LobbyState> {
       });
     }
 
-    // Update metrics
+    // Update metrics and metadata
     metrics.lobbyPlayersWaiting.set(this.state.getWaitingCount());
+    this.updateMetadata();
   }
 
   onDispose(): void {
@@ -151,6 +157,10 @@ export class LobbyRoom extends Room<LobbyState> {
       removed,
       remainingPlayers: this.state.waitingPlayers.size,
     });
+
+    // Update metrics and metadata
+    metrics.lobbyPlayersWaiting.set(this.state.getWaitingCount());
+    this.updateMetadata();
   }
 
   private handleTimeouts(): void {
@@ -166,22 +176,29 @@ export class LobbyRoom extends Room<LobbyState> {
 
     timedOutIds.forEach((sessionId) => {
       const client = this.clients.find((c) => c.sessionId === sessionId);
+
+      // Send timeout message to client if they're still connected
       if (client) {
         client.send('timeout', { reason: 'No match found in time' });
-        this.state.removePlayer(sessionId);
-        log('Player timed out:', {
-          sessionId,
-          remainingPlayers: this.state.waitingPlayers.size,
-        });
-
-        // Update metrics
-        metrics.lobbyTimeoutsTotal.inc();
       }
+
+      // Always remove timed out player from state, even if client disconnected
+      this.state.removePlayer(sessionId);
+
+      log('Player timed out:', {
+        sessionId,
+        clientFound: !!client,
+        remainingPlayers: this.state.waitingPlayers.size,
+      });
+
+      // Update metrics
+      metrics.lobbyTimeoutsTotal.inc();
     });
 
-    // Update waiting players metric after timeouts
+    // Update waiting players metric and metadata after timeouts
     if (timedOutIds.length > 0) {
       metrics.lobbyPlayersWaiting.set(this.state.getWaitingCount());
+      this.updateMetadata();
     }
   }
 
@@ -268,10 +285,11 @@ export class LobbyRoom extends Room<LobbyState> {
         remainingWaiting: this.state.getWaitingCount(),
       });
 
-      // Update metrics
+      // Update metrics and metadata
       metrics.lobbyMatchesTotal.inc();
       metrics.lobbyMatchDuration.observe(matchDuration);
       metrics.lobbyPlayersWaiting.set(this.state.getWaitingCount());
+      this.updateMetadata();
     } else {
       log.error('Match failed - players not found:', {
         player1Found: !!player1,
@@ -279,5 +297,9 @@ export class LobbyRoom extends Room<LobbyState> {
         match,
       });
     }
+  }
+
+  private updateMetadata(): void {
+    this.setMetadata({ waitingCount: this.state.getWaitingCount() });
   }
 }

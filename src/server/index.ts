@@ -44,11 +44,12 @@ app.get(config.metricsPath, async (req, res) => {
 app.get('/api/lobby/count', async (req, res) => {
   try {
     const rooms = await (gameServer as any).matchMaker.query({ name: 'lobby' });
-    if (rooms.length === 0 || !rooms[0].state) {
+    if (rooms.length === 0) {
       res.json({ count: 0 });
       return;
     }
-    const count = rooms[0].state.getWaitingCount();
+    // Read waiting count from room metadata
+    const count = rooms[0].metadata?.waitingCount ?? 0;
     res.json({ count });
   } catch (error) {
     // If query fails, assume no lobby exists

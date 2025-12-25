@@ -6,6 +6,8 @@ describe('LobbyRoom', () => {
 
   beforeEach(() => {
     room = new LobbyRoom();
+    // Mock setMetadata to prevent errors in unit tests
+    room.setMetadata = jest.fn();
   });
 
   afterEach(() => {

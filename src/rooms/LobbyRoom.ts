@@ -87,19 +87,14 @@ export class LobbyRoom extends Room<LobbyState> {
       return;
     }
 
-    if (consented) {
-      this.state.removePlayer(client.sessionId);
-      log('Player removed (consented):', {
-        sessionId: client.sessionId,
-        remainingPlayers: this.state.waitingPlayers.size,
-      });
-    } else {
-      player.setStatus('disconnected');
-      log('Player marked disconnected:', {
-        sessionId: client.sessionId,
-        waitingCount: this.state.getWaitingCount(),
-      });
-    }
+    // Always remove player from lobby when they leave
+    // No reconnection handler exists, so keeping disconnected players would cause memory leak
+    this.state.removePlayer(client.sessionId);
+    log('Player removed:', {
+      sessionId: client.sessionId,
+      consented,
+      remainingPlayers: this.state.waitingPlayers.size,
+    });
 
     // Update metrics and metadata
     metrics.lobbyPlayersWaiting.set(this.state.getWaitingCount());

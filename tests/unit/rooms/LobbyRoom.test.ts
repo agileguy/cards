@@ -108,14 +108,14 @@ describe('LobbyRoom', () => {
       expect(room.state.waitingPlayers.size).toBe(0);
     });
 
-    it('should mark player as disconnected when not consented', () => {
+    it('should remove player when not consented to prevent memory leak', () => {
       const mockClient = { sessionId: 'session-123' } as any;
       room.onJoin(mockClient, { name: 'Alice' });
 
       room.onLeave(mockClient, false);
 
-      const player = room.state.waitingPlayers.get('session-123');
-      expect(player?.status).toBe('disconnected');
+      // Player should be removed to prevent memory leak (no reconnection handler)
+      expect(room.state.waitingPlayers.size).toBe(0);
     });
 
     it('should handle leaving when player does not exist', () => {

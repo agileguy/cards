@@ -16,6 +16,7 @@
     "lint:fix": "eslint src tests --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "ci:check": "npm run typecheck && npm run build && npm run format:check && npm run lint && npm test",
     "prepare": "husky install"
   },
   "keywords": [

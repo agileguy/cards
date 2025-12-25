@@ -397,76 +397,83 @@ it('should increment lobby matches counter', async () => {
 
 All PRs must pass CI checks. Running these locally ensures faster iteration and prevents CI failures.
 
-### Required Checks
-
-Run all of these commands and ensure they pass:
+### Quick Check (Run This First!)
 
 ```bash
-# 1. TypeScript type checking
-npm run typecheck
-
-# 2. Build check
-npm run build
-
-# 3. Linting
-npm run lint
-
-# 4. Format checking
-npm run format:check
-
-# 5. Tests
-npm test
-
-# 6. Test coverage (should maintain 80%+)
-npm run test:coverage
+# Run all checks in sequence - stops on first failure
+docker compose run --rm test npm run ci:check
 ```
 
-### Docker-Based Checks
+This runs all checks in the exact same order as CI:
+1. TypeScript type checking (`typecheck`)
+2. Build verification (`build`)
+3. Prettier formatting (`format:check`)
+4. ESLint linting (`lint`)
+5. Tests (`test`)
 
-Since this is a Docker-first project, you can also run checks in Docker:
+If this passes, your PR will pass CI! ✅
+
+### Individual Checks
+
+If the quick check fails, run these individually to identify the issue:
 
 ```bash
-# Run typecheck in Docker
-docker compose run --rm test npm run typecheck
-
-# Run build in Docker
-docker compose run --rm test npm run build
-
-# Run linting in Docker
-docker compose run --rm test npm run lint
-
-# Run format check in Docker
+# 1. Format checking (MUST RUN FIRST - fixes before linting)
 docker compose run --rm test npm run format:check
 
-# Run tests in Docker
-docker compose run test
+# 2. TypeScript type checking
+docker compose run --rm test npm run typecheck
+
+# 3. Build check
+docker compose run --rm test npm run build
+
+# 4. Linting
+docker compose run --rm test npm run lint
+
+# 5. Tests
+docker compose run --rm test npm test
+
+# 6. Test coverage (should maintain 80%+)
+docker compose run --rm test npm run test:coverage
 ```
 
 ### What CI Checks
 
 The GitHub Actions CI workflow runs:
-- **Lint job**: ESLint and Prettier formatting
+- **Lint job**:
+  - `npm run format:check` - Prettier code formatting
+  - `npm run lint` - ESLint
 - **Test jobs**: Tests on Node 18.x and 20.x with coverage
+
+**CRITICAL**: CI runs `format:check` BEFORE `lint`. Always run format:check first locally too!
 
 All of these must pass before a PR can be merged.
 
 ### Fixing Issues
 
-If checks fail:
+If checks fail, fix them in this order:
 
 ```bash
-# Fix linting issues automatically
-npm run lint:fix
+# 1. Fix formatting issues FIRST (auto-fix)
+docker compose run --rm test npm run format
 
-# Fix formatting issues automatically
-npm run format
+# 2. Verify formatting is fixed
+docker compose run --rm test npm run format:check
 
-# Fix TypeScript errors
-# (Review compiler errors and fix manually)
+# 3. Fix linting issues (auto-fix where possible)
+docker compose run --rm test npm run lint:fix
 
-# Fix failing tests
-# (Review test output and fix code/tests)
+# 4. Verify linting passes
+docker compose run --rm test npm run lint
+
+# 5. Fix TypeScript errors (manual)
+# Review compiler errors and fix manually
+
+# 6. Fix failing tests (manual)
+# Review test output and fix code/tests
 ```
+
+**Note**: Always fix formatting before linting - Prettier can auto-fix many style issues that ESLint would warn about.
 
 ---
 

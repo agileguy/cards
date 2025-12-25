@@ -20,6 +20,12 @@ export class MetricsCollector {
   // Performance metrics
   public readonly messageLatency: Histogram;
 
+  // Lobby metrics
+  public readonly lobbyPlayersWaiting: Gauge;
+  public readonly lobbyMatchesTotal: Counter;
+  public readonly lobbyMatchDuration: Histogram;
+  public readonly lobbyTimeoutsTotal: Counter;
+
   constructor() {
     this.register = new Registry();
 
@@ -81,6 +87,32 @@ export class MetricsCollector {
       name: 'cards_message_latency_seconds',
       help: 'Message processing latency',
       buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1],
+      registers: [this.register],
+    });
+
+    // Lobby metrics
+    this.lobbyPlayersWaiting = new Gauge({
+      name: 'cards_lobby_players_waiting',
+      help: 'Current number of players waiting in lobby',
+      registers: [this.register],
+    });
+
+    this.lobbyMatchesTotal = new Counter({
+      name: 'cards_lobby_matches_total',
+      help: 'Total number of successful matches in lobby',
+      registers: [this.register],
+    });
+
+    this.lobbyMatchDuration = new Histogram({
+      name: 'cards_lobby_match_duration_seconds',
+      help: 'Time taken to find a match in seconds',
+      buckets: [1, 5, 10, 15, 20, 30],
+      registers: [this.register],
+    });
+
+    this.lobbyTimeoutsTotal = new Counter({
+      name: 'cards_lobby_timeouts_total',
+      help: 'Total number of lobby timeouts',
       registers: [this.register],
     });
   }

@@ -357,12 +357,12 @@ We will use **Colyseus** as our game server framework. Colyseus provides:
                                                                            - [x] - [x] Integrate Prometheus metrics
                                                                            - [x] - [x] Set up Grafana dashboards
                                                                           
-                                                                           - [ ] ### Phase 2: Lobby System (Week 2)
-                                                                           - [ ] - [ ] Create LobbyRoom class
-                                                                           - [ ] - [ ] Implement matchmaking logic
-                                                                           - [ ] - [ ] Player queue management
-                                                                           - [ ] - [ ] Lobby state synchronization
-                                                                           - [ ] - [ ] Timeout handling for inactive players
+                                                                           - [x] ### Phase 2: Lobby System (Week 2) ✅ COMPLETE
+                                                                           - [x] - [x] Create LobbyRoom class
+                                                                           - [x] - [x] Implement matchmaking logic
+                                                                           - [x] - [x] Player queue management
+                                                                           - [x] - [x] Lobby state synchronization
+                                                                           - [x] - [x] Timeout handling for inactive players
                                                                           
                                                                            - [ ] ### Phase 3: Game Room Framework (Week 2-3)
                                                                            - [ ] - [ ] Create base GameRoom class

@@ -1,4 +1,4 @@
-import { loadColyseusClient } from './lib/colyseus.js';
+import { Client } from './lib/colyseus-esm/index.mjs';
 
 /**
  * GameClient - WebSocket client wrapper for Colyseus
@@ -26,8 +26,7 @@ export class GameClient {
   async initialize() {
     if (this.ready) return;
 
-    const Colyseus = await loadColyseusClient();
-    this.client = new Colyseus.Client(this.serverUrl);
+    this.client = new Client(this.serverUrl);
     this.ready = true;
   }
 

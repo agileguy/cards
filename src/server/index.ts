@@ -5,6 +5,7 @@ import { monitor } from '@colyseus/monitor';
 import { metrics } from '../utils/metrics';
 import { config } from './config';
 import { LobbyRoom } from '../rooms/LobbyRoom';
+import { SnapRoom } from '../rooms/SnapRoom';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('server');
@@ -18,6 +19,9 @@ const gameServer = new Server({
 
 // Define lobby room
 gameServer.define('lobby', LobbyRoom);
+
+// Define snap game room
+gameServer.define('snap', SnapRoom);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

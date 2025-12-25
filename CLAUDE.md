@@ -14,7 +14,40 @@ This is non-negotiable. Every feature, bug fix, or change MUST follow this workf
       4. 4. **Run the test** - Verify it passes (green phase)
          5. 5. **Refactor** - Improve code quality while keeping tests green
             6. 6. **Commit** - With descriptive message following conventional commits
-              
+           
+         6. ## CRITICAL: Docker-First Development
+        
+         7. **ALL development MUST be done using Docker.**
+        
+         8. This project uses Docker and Docker Compose from the earliest stages:
+        
+         9. 1. **Start development environment**: `docker-compose up`
+            2. 2. **Run tests**: `docker-compose run test`
+               3. 3. **Never install dependencies locally** - Use containers only
+                  4. 4. **Keep docker-compose.yml updated** - It must always work
+                    
+                     5. ### Docker Commands
+                    
+                     6. ```bash
+                        # Start the development server
+                        docker-compose up
+
+                        # Run tests
+                        docker-compose run test
+
+                        # Run tests with watch mode
+                        docker-compose run test npm run test:watch
+
+                        # Rebuild containers after dependency changes
+                        docker-compose build --no-cache
+                        ```
+           
+                        ### Why Docker?
+           
+                        - Consistent environment across all developers
+                        - - No "works on my machine" issues
+                          - - Easy integration testing of the full system
+                          - Production parity from day one
                7. ## Development Workflow
               
                8. ### Before Writing Any Code

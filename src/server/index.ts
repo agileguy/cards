@@ -23,6 +23,14 @@ gameServer.define('lobby', LobbyRoom);
 // Define snap game room
 gameServer.define('snap', SnapRoom);
 
+// Serve static files from public directory
+app.use(express.static('public'));
+
+// Serve index.html for root path
+app.get('/', (req, res) => {
+  res.sendFile('index.html', { root: 'public' });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({

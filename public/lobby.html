@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lobby - Cards</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Lobby</h1>
+      <a href="/" class="btn-secondary">Back to Home</a>
+    </header>
+
+    <main>
+      <section class="lobby-section">
+        <div class="connection-status">
+          <span class="status-indicator"></span>
+          <span class="status-text">Disconnected</span>
+        </div>
+
+        <div class="join-form">
+          <h2>Join Matchmaking</h2>
+          <form id="joinLobbyForm">
+            <div class="form-group">
+              <label for="playerName">Your Name</label>
+              <input
+                type="text"
+                id="playerName"
+                name="playerName"
+                placeholder="Enter your name"
+                required
+                maxlength="20"
+                autocomplete="off"
+              >
+            </div>
+            <button type="submit" class="btn-primary">Find Match</button>
+          </form>
+        </div>
+
+        <div class="lobby-info">
+          <h3>Waiting for match...</h3>
+          <div class="waiting-count">
+            <span class="count">0</span> players waiting
+          </div>
+          <div class="loading-spinner"></div>
+          <p class="info-text">You will be automatically matched with another player</p>
+        </div>
+
+        <div class="error-message"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="/js/lobby.js"></script>
+</body>
+</html>

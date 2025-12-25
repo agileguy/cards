@@ -42,6 +42,59 @@ We will use **Colyseus** as our game server framework. Colyseus provides:
                                       │                        Clients                               │
                                       │         (Web browsers / Mobile apps)                         │
                                       └─────────────────────┬───────────────────────────────────────┘
+
+                                      ### Docker Development Environment
+
+                                      All development MUST be done using Docker from the earliest stages of the project. This ensures consistent development environments and simplifies deployment.
+
+                                      #### Requirements
+
+                                      - **Docker**: All services run in containers
+                                      - **Docker Compose**: Orchestration for the complete system
+                                      - **docker-compose.yml**: Must be maintained from day one
+
+                                      #### Development Workflow
+
+                                      1. **Local Development**: `docker-compose up` starts the entire system
+                                      2. **Testing**: All tests run inside Docker containers
+                                      3. **CI/CD**: GitHub Actions use Docker for consistent builds
+
+                                      #### Docker Compose Services
+
+                                      ```yaml
+                                      services:
+                                        # Game server
+                                        server:
+                                          build: .
+                                          ports:
+                                            - "2567:2567"
+                                          volumes:
+                                            - .:/app
+                                            - /app/node_modules
+                                          environment:
+                                            - NODE_ENV=development
+
+                                        # Test runner
+                                        test:
+                                          build: .
+                                          command: npm test
+                                          volumes:
+                                            - .:/app
+                                            - /app/node_modules
+
+                                        # Optional: Redis for scaling (future)
+                                        # redis:
+                                        #   image: redis:alpine
+                                        #   ports:
+                                        #     - "6379:6379"
+                                      ```
+                                   
+                                      #### Benefits
+                                   
+                                      - **Consistency**: Same environment for all developers
+                                      - - **Isolation**: No conflicts with local Node.js versions
+                                        - - **Integration Testing**: Easy to test full system locally
+                                          - - **Production Parity**: Development matches production setup
                                                             │ WebSocket
                                       ┌─────────────────────▼───────────────────────────────────────┐
                                       │                   Colyseus Server                            │

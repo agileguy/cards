@@ -220,14 +220,17 @@ async function initGame() {
   }
 
   try {
+    console.log('=== JOINING GAME ===');
+    console.log('Match ID:', matchId);
     updateConnectionStatus(false);
 
-    // Join the snap game room
-    currentRoom = await client.createGame('snap', {});
+    // Join the matched game room by ID
+    currentRoom = await client.joinGame(matchId);
     mySessionId = currentRoom.sessionId;
     updateConnectionStatus(true);
 
-    console.log('Joined game:', currentRoom.sessionId);
+    console.log('✓ Joined game:', currentRoom.sessionId);
+    console.log('Room ID:', currentRoom.roomId);
 
     // Listen for state changes
     currentRoom.state.onChange = () => {

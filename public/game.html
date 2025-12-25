@@ -7,6 +7,15 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/cards.css">
   <link rel="stylesheet" href="/css/animations.css">
+
+  <!-- Import map for Colyseus from CDN -->
+  <script type="importmap">
+  {
+    "imports": {
+      "colyseus.js": "https://cdn.skypack.dev/colyseus.js@0.15.28"
+    }
+  }
+  </script>
 </head>
 <body>
   <div class="container">
@@ -76,13 +85,7 @@
     </main>
   </div>
 
-  <!-- Load Buffer polyfill first -->
-  <script src="/js/lib/buffer-polyfill.js"></script>
-
-  <!-- Load Colyseus UMD build -->
-  <script src="/js/lib/colyseus-vendored.js"></script>
-
-  <!-- Then load our ES module game code -->
+  <!-- Load our ES module game code -->
   <script type="module" src="/js/game.js"></script>
 </body>
 </html>

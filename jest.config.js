@@ -11,6 +11,7 @@ module.exports = {
         '!src/**/*.d.ts',
         '!src/**/*.test.ts',
         '!src/**/*.spec.ts',
+        '!src/server/index.ts', // Exclude server entry point from coverage
     ],
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov', 'html'],

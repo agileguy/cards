@@ -26,9 +26,8 @@ describe('Server Integration', () => {
     });
   });
 
-  afterAll(async () => {
-    await gameServer.gracefullyShutdown();
-    httpServer.close();
+  afterAll((done) => {
+    httpServer.close(done);
   });
 
   describe('GET /health', () => {

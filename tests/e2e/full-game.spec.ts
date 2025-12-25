@@ -1,20 +1,4 @@
-import { test, expect, Page, BrowserContext } from '@playwright/test';
-
-/**
- * Helper: Join lobby and return match ID
- */
-async function joinLobbyAndGetMatch(page: Page, playerName: string): Promise<string> {
-  await page.goto('/lobby.html');
-  await page.fill('#playerName', playerName);
-  await page.click('button[type="submit"]');
-
-  // Wait for redirect to game page
-  await page.waitForURL(/\/game\.html\?matchId=/, { timeout: 10000 });
-
-  const url = new URL(page.url());
-  const matchId = url.searchParams.get('matchId');
-  return matchId!;
-}
+import { test, expect, BrowserContext } from '@playwright/test';
 
 /**
  * Helper: Setup two players in a game
@@ -187,7 +171,7 @@ test.describe('Game Completion', () => {
     const context2 = await browser.newContext();
 
     try {
-      const { page1, page2 } = await setupTwoPlayerGame(context1, context2);
+      const { page1 } = await setupTwoPlayerGame(context1, context2);
 
       // Note: In a real test, we'd play until game ends
       // For now, just verify game over UI exists

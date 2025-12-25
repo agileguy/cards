@@ -301,13 +301,11 @@ describe('SnapGameState', () => {
 
       // Player 2 plays matching card
       const hand2 = state.playerHands.get('session-2');
-      if (hand2) {
-        const card2 = hand2.shift();
-        if (card2) {
-          const hasMatch = state.addToPile(card2);
-          expect(hasMatch).toBe(true);
-        }
-      }
+      expect(hand2).toBeDefined();
+      const card2 = hand2!.shift();
+      expect(card2).toBeDefined();
+      const hasMatch = state.addToPile(card2!);
+      expect(hasMatch).toBe(true);
 
       // Player 2 snaps successfully
       const snapResult = state.handleSnap('session-2');

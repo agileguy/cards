@@ -15,24 +15,24 @@ class TestGameEngine implements IGameEngine<TestGameState> {
     this.state = new TestGameState();
   }
 
-  initialize(players: any[]): TestGameState {
+  initialize(_players: any[]): TestGameState {
     this.state = new TestGameState();
     return this.state;
   }
 
-  processAction(state: TestGameState, action: any): any {
-    return { success: true, newState: state };
+  processAction(_state: TestGameState, _action: any): any {
+    return { success: true, newState: _state };
   }
 
-  validateAction(state: TestGameState, action: any): any {
+  validateAction(_state: TestGameState, _action: any): any {
     return { valid: true };
   }
 
-  isGameOver(state: TestGameState): boolean {
+  isGameOver(_state: TestGameState): boolean {
     return false;
   }
 
-  getWinner(state: TestGameState): string | null {
+  getWinner(_state: TestGameState): string | null {
     return null;
   }
 

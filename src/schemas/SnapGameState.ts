@@ -32,7 +32,9 @@ export class PlayerHand extends Schema {
   }
 
   public shift(): SnapCard | undefined {
-    if (this.cards.length === 0) return undefined;
+    if (this.cards.length === 0) {
+      return undefined;
+    }
     const card = this.cards[0];
     this.cards.splice(0, 1);
     return card;

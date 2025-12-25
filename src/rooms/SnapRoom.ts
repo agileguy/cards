@@ -48,7 +48,7 @@ export class SnapRoom extends GameRoom<SnapGameState> {
     });
   }
 
-  private handlePlayCard(client: Client, message: any): void {
+  private handlePlayCard(client: Client, _message: any): void {
     log('handlePlayCard:', {
       sessionId: client.sessionId,
       currentTurn: this.state.currentTurn,

@@ -40,9 +40,6 @@ test.describe('Keyboard Navigation', () => {
     await page.keyboard.press('Tab');
 
     // Should be able to focus on action buttons
-    const playCardBtn = page.locator('#playCardBtn');
-    const snapBtn = page.locator('#snapBtn');
-
     const focusedEl = page.locator(':focus');
     await expect(focusedEl).toBeVisible();
   });

@@ -209,7 +209,6 @@ test.describe('Two Player Game Flow', () => {
       const isPlayer1Turn = turn1?.includes('Your turn');
 
       const currentPlayer = isPlayer1Turn ? page1 : page2;
-      const otherPlayer = isPlayer1Turn ? page2 : page1;
 
       // Current player's button should not be disabled
       const playCardBtn = currentPlayer.locator('#playCardBtn');
@@ -358,9 +357,6 @@ test.describe('Accessibility', () => {
     await page.keyboard.press('Tab');
 
     // Should be able to focus on buttons
-    const playCardBtn = page.locator('#playCardBtn');
-    const snapBtn = page.locator('#snapBtn');
-
     const focusedElement = page.locator(':focus');
     await expect(focusedElement).toBeVisible({ timeout: 3000 });
   });

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ES Module Test</title>
+</head>
+<body>
+  <h1>ES Module Connection Test</h1>
+  <button id="testBtn">Test Connection</button>
+  <pre id="output"></pre>
+
+  <script type="module">
+    import { Client } from './js/lib/colyseus-esm/index.mjs';
+
+    const output = document.getElementById('output');
+    function log(msg) {
+      output.textContent += msg + '\n';
+      console.log(msg);
+    }
+
+    log('✓ ES modules loaded successfully!');
+    log('Client type: ' + typeof Client);
+
+    document.getElementById('testBtn').addEventListener('click', async () => {
+      try {
+        log('\nTesting connection...');
+        const client = new Client('ws://' + window.location.host);
+        log('✓ Client created!');
+
+        const room = await client.joinOrCreate('lobby', { name: 'ESMTest' });
+        log('✓ Connected to lobby!');
+        log('Session: ' + room.sessionId);
+
+        room.onMessage('joined_lobby', (msg) => {
+          log('✓ Received message: ' + JSON.stringify(msg));
+        });
+
+        room.send('join_lobby', { name: 'ESMTest' });
+        log('✓ Sent join message');
+
+        setTimeout(async () => {
+          await room.leave();
+          log('✓ Left room - TEST COMPLETE!');
+        }, 2000);
+
+      } catch (error) {
+        log('✗ Error: ' + error.message);
+        console.error(error);
+      }
+    });
+  </script>
+</body>
+</html>

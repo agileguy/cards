@@ -1,7 +1,12 @@
 import { GameClient } from './client.js';
 
 // Initialize game client
+console.log('=== LOBBY.JS LOADING ===');
+console.log('GameClient:', GameClient);
+console.log('Creating client...');
+
 const client = new GameClient();
+console.log('✓ Client created:', client);
 
 // DOM elements
 const joinForm = document.getElementById('joinLobbyForm');
@@ -72,18 +77,27 @@ joinForm.addEventListener('submit', async (e) => {
 
   const playerName = playerNameInput.value.trim();
 
+  console.log('=== LOBBY FORM SUBMIT ===');
+  console.log('Player name:', playerName);
+
   if (!playerName) {
     showError('Please enter your name');
     return;
   }
 
   try {
+    console.log('Showing lobby waiting state...');
     // Show waiting state
     showLobbyWaiting();
     updateConnectionStatus(false);
 
+    console.log('Attempting to join lobby...');
+    console.log('Client:', client);
+    console.log('Client type:', typeof client);
+
     // Join lobby
     currentRoom = await client.joinLobby(playerName);
+    console.log('✓ Joined lobby!');
     updateConnectionStatus(true);
 
     console.log('Joined lobby:', currentRoom.sessionId);

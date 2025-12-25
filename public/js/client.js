@@ -1,7 +1,6 @@
-import { Client } from './lib/colyseus-esm/index.mjs';
-
 /**
  * GameClient - WebSocket client wrapper for Colyseus
+ * Uses window.Colyseus loaded from UMD build
  */
 export class GameClient {
   constructor(serverUrl) {
@@ -26,7 +25,12 @@ export class GameClient {
   async initialize() {
     if (this.ready) return;
 
-    this.client = new Client(this.serverUrl);
+    // Wait for Colyseus to be loaded (from UMD script tag)
+    if (!window.Colyseus) {
+      throw new Error('Colyseus library not loaded. Make sure colyseus-vendored.js is loaded before this module.');
+    }
+
+    this.client = new window.Colyseus.Client(this.serverUrl);
     this.ready = true;
   }
 

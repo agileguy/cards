@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head><title>JSDelivr Test</title></head>
+<body>
+  <h1>Testing JSDelivr CDN</h1>
+  <pre id="output"></pre>
+
+  <script src="https://cdn.jsdelivr.net/npm/colyseus.js@0.15.28/dist/colyseus.js"></script>
+  <script>
+    const output = document.getElementById('output');
+    function log(msg) {
+      output.textContent += msg + '\n';
+      console.log(msg);
+    }
+
+    log('Colyseus from JSDelivr: ' + typeof Colyseus);
+    if (Colyseus) {
+      log('Keys: ' + Object.keys(Colyseus).join(', '));
+      log('Client: ' + typeof Colyseus.Client);
+
+      if (Colyseus.Client) {
+        try {
+          const client = new Colyseus.Client('ws://localhost:2567');
+          log('✓ SUCCESS! Client created!');
+        } catch (e) {
+          log('✗ Error: ' + e.message);
+        }
+      }
+    }
+  </script>
+</body>
+</html>

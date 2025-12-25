@@ -20,8 +20,9 @@ const gameServer = new Server({
 // Define lobby room
 gameServer.define('lobby', LobbyRoom);
 
-// Define snap game room
-gameServer.define('snap', SnapRoom);
+// Define snap game room with matchId filtering for proper matchmaking
+// This ensures players with the same matchId join the same room
+gameServer.define('snap', SnapRoom).filterBy(['matchId']);
 
 // Serve static files from public directory
 app.use(express.static('public'));

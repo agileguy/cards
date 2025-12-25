@@ -53,8 +53,8 @@ export class GameClient {
       await this.initialize();
     }
 
-    // Use joinOrCreate with the matchId as the room name
-    // This allows both players to join the same private room
+    // Use joinOrCreate with matchId option for room filtering
+    // Server uses filterBy(['matchId']) to ensure matched players join the same room
     this.currentRoom = await this.client.joinOrCreate('snap', {
       matchId: roomId,
       name: playerName || 'Player',

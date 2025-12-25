@@ -309,7 +309,7 @@ async function initGame() {
     // Listen for player hand map changes (when hands are added)
     if (currentRoom.state.playerHands) {
       currentRoom.state.playerHands.onAdd = (hand, sessionId) => {
-        console.log('👋 Hand added for player:', sessionId, 'with', hand.cards.length, 'cards');
+        console.log('👋 Hand added for player:', sessionId, 'with', hand.cards?.length || 0, 'cards');
         gameState = currentRoom.state;
 
         // Set up listener for this hand's cards array
@@ -384,6 +384,11 @@ async function initGame() {
     currentRoom.onMessage('error', (message) => {
       console.error('Game error message:', message);
       showError(message.message || 'An error occurred');
+    });
+
+    currentRoom.onMessage('game_over', (message) => {
+      console.log('Game over message:', message);
+      showGameOver(message.winner);
     });
 
     currentRoom.onError((code, message) => {

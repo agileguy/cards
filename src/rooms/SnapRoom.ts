@@ -113,18 +113,21 @@ export class SnapRoom extends GameRoom<SnapGameState> {
       playerId: client.sessionId,
     };
 
+    // Capture pile size BEFORE processAction clears it
+    const pileSize = this.state.centralPile.length;
+
     const result = this.gameEngine.processAction(this.state, action);
 
     if (result.success) {
       log('Successful snap:', {
         sessionId: client.sessionId,
-        cardsWon: this.state.centralPile.length,
+        cardsWon: pileSize,
         newHandSize: this.state.getHandSize(client.sessionId),
       });
 
       this.broadcast('snap_success', {
         playerId: client.sessionId,
-        cardsWon: this.state.centralPile.length,
+        cardsWon: pileSize,
       });
 
       // Check if game is over
@@ -141,6 +144,12 @@ export class SnapRoom extends GameRoom<SnapGameState> {
       this.broadcast('snap_fail', {
         playerId: client.sessionId,
       });
+
+      // Check if game is over after penalty (player might have run out of cards)
+      if (this.gameEngine.isGameOver(this.state)) {
+        const winner = this.gameEngine.getWinner(this.state);
+        this.endGame(winner);
+      }
     }
   }
 }

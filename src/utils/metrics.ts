@@ -16,6 +16,7 @@ export class MetricsCollector {
   public readonly gamesStarted: Counter;
   public readonly gamesCompleted: Counter;
   public readonly gameDuration: Histogram;
+  public readonly gamePlayersConnected: Gauge;
 
   // Performance metrics
   public readonly messageLatency: Histogram;
@@ -66,19 +67,29 @@ export class MetricsCollector {
     this.gamesStarted = new Counter({
       name: 'cards_games_started_total',
       help: 'Total number of games started',
+      labelNames: ['game_type'],
       registers: [this.register],
     });
 
     this.gamesCompleted = new Counter({
       name: 'cards_games_completed_total',
       help: 'Total number of games completed',
+      labelNames: ['game_type'],
       registers: [this.register],
     });
 
     this.gameDuration = new Histogram({
       name: 'cards_game_duration_seconds',
       help: 'Game duration in seconds',
+      labelNames: ['game_type'],
       buckets: [10, 30, 60, 120, 300, 600],
+      registers: [this.register],
+    });
+
+    this.gamePlayersConnected = new Gauge({
+      name: 'cards_game_players_connected',
+      help: 'Current number of players connected to game rooms',
+      labelNames: ['game_type'],
       registers: [this.register],
     });
 

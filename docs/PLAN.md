@@ -95,6 +95,94 @@ We will use **Colyseus** as our game server framework. Colyseus provides:
                                       - - **Isolation**: No conflicts with local Node.js versions
                                         - - **Integration Testing**: Easy to test full system locally
                                           - - **Production Parity**: Development matches production setup
+                                            - 
+                                            ### Observability and Metrics
+                                         
+                                            **All services MUST emit metrics to Prometheus from the outset.** Observability is not optional - it is a core requirement from day one.
+                                         
+                                            #### Requirements
+                                         
+                                            - **Prometheus**: Metrics collection and storage
+                                            - - **Grafana**: Visualization and dashboards
+                                              - - **prom-client**: Node.js Prometheus client library
+                                                - - All services expose `/metrics` endpoint
+                                                 
+                                                  - #### Metrics to Collect
+                                                 
+                                                  - From the start, the server MUST emit:
+                                                 
+                                                  - 1. **Connection Metrics**
+                                                    2.    - `cards_connections_total` - Total connections (counter)
+                                                          -    - `cards_connections_active` - Current active connections (gauge)
+                                                           
+                                                               - 2. **Room Metrics**
+                                                                 3.    - `cards_rooms_total` - Total rooms created (counter)
+                                                                       -    - `cards_rooms_active` - Current active rooms (gauge)
+                                                                            -    - `cards_room_players` - Players per room (histogram)
+                                                                             
+                                                                                 - 3. **Game Metrics**
+                                                                                   4.    - `cards_games_started_total` - Games started (counter)
+                                                                                         -    - `cards_games_completed_total` - Games completed (counter)
+                                                                                              -    - `cards_game_duration_seconds` - Game duration (histogram)
+                                                                                               
+                                                                                                   - 4. **Performance Metrics**
+                                                                                                     5.    - `cards_message_latency_seconds` - Message processing time (histogram)
+                                                                                                           -    - `cards_state_sync_duration_seconds` - State sync time (histogram)
+                                                                                                            
+                                                                                                                - #### Docker Compose Integration
+                                                                                                            
+                                                                                                                - Prometheus and Grafana are included in the development environment:
+                                                                                                            
+                                                                                                                - ```yaml
+                                                                                                                  services:
+                                                                                                                    # ... existing services ...
+
+                                                                                                                    prometheus:
+                                                                                                                      image: prom/prometheus:latest
+                                                                                                                      ports:
+                                                                                                                        - "9090:9090"
+                                                                                                                      volumes:
+                                                                                                                        - ./prometheus.yml:/etc/prometheus/prometheus.yml
+                                                                                                                        - prometheus_data:/prometheus
+                                                                                                                      command:
+                                                                                                                        - '--config.file=/etc/prometheus/prometheus.yml'
+
+                                                                                                                    grafana:
+                                                                                                                      image: grafana/grafana:latest
+                                                                                                                      ports:
+                                                                                                                        - "3000:3000"
+                                                                                                                      volumes:
+                                                                                                                        - grafana_data:/var/lib/grafana
+                                                                                                                        - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+                                                                                                                      environment:
+                                                                                                                        - GF_SECURITY_ADMIN_PASSWORD=admin
+                                                                                                                      depends_on:
+                                                                                                                        - prometheus
+
+                                                                                                                  volumes:
+                                                                                                                    prometheus_data:
+                                                                                                                    grafana_data:
+                                                                                                                  ```
+                                                   
+                                                                                                                  #### Prometheus Configuration
+                                                   
+                                                                                                                  ```yaml
+                                                                                                                  # prometheus.yml
+                                                                                                                  global:
+                                                                                                                    scrape_interval: 15s
+
+                                                                                                                  scrape_configs:
+                                                                                                                    - job_name: 'cards-server'
+                                                                                                                      static_configs:
+                                                                                                                        - targets: ['server:2567']
+                                                                                                                  ```
+                                                   
+                                                                                                                  #### Implementation Notes
+                                                   
+                                                                                                                  - Use `prom-client` npm package for metrics
+                                                                                                                  - - Expose metrics on `/metrics` endpoint
+                                                                                                                    - - Create default Grafana dashboard for game metrics
+                                                                                                                      - - Set up alerts for critical metrics (high latency, connection drops)
                                                             │ WebSocket
                                       ┌─────────────────────▼───────────────────────────────────────┐
                                       │                   Colyseus Server                            │

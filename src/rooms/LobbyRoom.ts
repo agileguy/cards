@@ -234,6 +234,8 @@ export class LobbyRoom extends Room<LobbyState> {
       player2.setStatus('matched');
 
       // Send matched message to both players
+      // They will both use joinOrCreate with the same matchId
+      // The first one will create the room, the second will join it
       const client1 = this.clients.find(
         (c) => c.sessionId === match.player1SessionId
       );

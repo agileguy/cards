@@ -12,6 +12,7 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=2567
+      - DEBUG=cards:*
     command: npm run start:dev
     networks:
       - cards-network
@@ -25,6 +26,21 @@ services:
       - .:/app
       - /app/node_modules
     command: npm test
+    networks:
+      - cards-network
+
+  # E2E test runner with Playwright
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.57.0-noble
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      - BASE_URL=http://server:2567
+      - CI=true
+    command: sh -c "npm install && npx playwright test"
+    depends_on:
+      - server
     networks:
       - cards-network
 

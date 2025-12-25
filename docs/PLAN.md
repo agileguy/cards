@@ -12,14 +12,14 @@ We will use **Colyseus** as our game server framework. Colyseus provides:
 
 - Real-time multiplayer game server for Node.js
 - - Built-in room management and matchmaking
-  - - State synchronization between server and clients
-    - - WebSocket-based communication
-      - - Schema-based state serialization for efficient bandwidth usage
-        - - Built-in lobby system
+- - State synchronization between server and clients
+- - WebSocket-based communication
+- - Schema-based state serialization for efficient bandwidth usage
+- - Built-in lobby system
          
-          - ### Why Colyseus?
+- ### Why Colyseus?
          
-          - 1. **Battle-tested**: Used in production by many multiplayer games
+- 1. **Battle-tested**: Used in production by many multiplayer games
             2. 2. **Room-based architecture**: Perfect for card games where players join game rooms
                3. 3. **State management**: Automatic state sync reduces boilerplate code
                   4. 4. **Scalability**: Supports horizontal scaling with Redis
@@ -29,15 +29,15 @@ We will use **Colyseus** as our game server framework. Colyseus provides:
                            7. ### Additional Dependencies
                           
                            8. - **@colyseus/schema**: State serialization
-                              - - **@colyseus/monitor**: Admin dashboard for monitoring rooms
-                                - - **express**: HTTP server for REST endpoints
-                                  - - **uuid**: Unique identifier generation
+- - **@colyseus/monitor**: Admin dashboard for monitoring rooms
+- - **express**: HTTP server for REST endpoints
+- - **uuid**: Unique identifier generation
                                    
-                                    - ## Architecture
+- ## Architecture
                                    
-                                    - ### High-Level Design
+- ### High-Level Design
                                    
-                                    - ```
+- ```
                                       ┌─────────────────────────────────────────────────────────────┐
                                       │                        Clients                               │
                                       │         (Web browsers / Mobile apps)                         │
@@ -49,9 +49,9 @@ We will use **Colyseus** as our game server framework. Colyseus provides:
 
                                       #### Requirements
 
-                                      - **Docker**: All services run in containers
-                                      - **Docker Compose**: Orchestration for the complete system
-                                      - **docker-compose.yml**: Must be maintained from day one
+- **Docker**: All services run in containers
+- **Docker Compose**: Orchestration for the complete system
+- **docker-compose.yml**: Must be maintained from day one
 
                                       #### Development Workflow
 
@@ -67,20 +67,20 @@ We will use **Colyseus** as our game server framework. Colyseus provides:
                                         server:
                                           build: .
                                           ports:
-                                            - "2567:2567"
+- "2567:2567"
                                           volumes:
-                                            - .:/app
-                                            - /app/node_modules
+- .:/app
+- /app/node_modules
                                           environment:
-                                            - NODE_ENV=development
+- NODE_ENV=development
 
                                         # Test runner
                                         test:
                                           build: .
                                           command: npm test
                                           volumes:
-                                            - .:/app
-                                            - /app/node_modules
+- .:/app
+- /app/node_modules
 
                                         # Optional: Redis for scaling (future)
                                         # redis:
@@ -91,73 +91,73 @@ We will use **Colyseus** as our game server framework. Colyseus provides:
                                    
                                       #### Benefits
                                    
-                                      - **Consistency**: Same environment for all developers
-                                      - - **Isolation**: No conflicts with local Node.js versions
-                                        - - **Integration Testing**: Easy to test full system locally
-                                          - - **Production Parity**: Development matches production setup
-                                            - 
+- **Consistency**: Same environment for all developers
+- - **Isolation**: No conflicts with local Node.js versions
+- - **Integration Testing**: Easy to test full system locally
+- - **Production Parity**: Development matches production setup
+- 
                                             ### Observability and Metrics
                                          
                                             **All services MUST emit metrics to Prometheus from the outset.** Observability is not optional - it is a core requirement from day one.
                                          
                                             #### Requirements
                                          
-                                            - **Prometheus**: Metrics collection and storage
-                                            - - **Grafana**: Visualization and dashboards
-                                              - - **prom-client**: Node.js Prometheus client library
-                                                - - All services expose `/metrics` endpoint
+- **Prometheus**: Metrics collection and storage
+- - **Grafana**: Visualization and dashboards
+- - **prom-client**: Node.js Prometheus client library
+- - All services expose `/metrics` endpoint
                                                  
-                                                  - #### Metrics to Collect
+- #### Metrics to Collect
                                                  
-                                                  - From the start, the server MUST emit:
+- From the start, the server MUST emit:
                                                  
-                                                  - 1. **Connection Metrics**
+- 1. **Connection Metrics**
                                                     2.    - `cards_connections_total` - Total connections (counter)
-                                                          -    - `cards_connections_active` - Current active connections (gauge)
+-    - `cards_connections_active` - Current active connections (gauge)
                                                            
-                                                               - 2. **Room Metrics**
+- 2. **Room Metrics**
                                                                  3.    - `cards_rooms_total` - Total rooms created (counter)
-                                                                       -    - `cards_rooms_active` - Current active rooms (gauge)
-                                                                            -    - `cards_room_players` - Players per room (histogram)
+-    - `cards_rooms_active` - Current active rooms (gauge)
+-    - `cards_room_players` - Players per room (histogram)
                                                                              
-                                                                                 - 3. **Game Metrics**
+- 3. **Game Metrics**
                                                                                    4.    - `cards_games_started_total` - Games started (counter)
-                                                                                         -    - `cards_games_completed_total` - Games completed (counter)
-                                                                                              -    - `cards_game_duration_seconds` - Game duration (histogram)
+-    - `cards_games_completed_total` - Games completed (counter)
+-    - `cards_game_duration_seconds` - Game duration (histogram)
                                                                                                
-                                                                                                   - 4. **Performance Metrics**
+- 4. **Performance Metrics**
                                                                                                      5.    - `cards_message_latency_seconds` - Message processing time (histogram)
-                                                                                                           -    - `cards_state_sync_duration_seconds` - State sync time (histogram)
+-    - `cards_state_sync_duration_seconds` - State sync time (histogram)
                                                                                                             
-                                                                                                                - #### Docker Compose Integration
+- #### Docker Compose Integration
                                                                                                             
-                                                                                                                - Prometheus and Grafana are included in the development environment:
+- Prometheus and Grafana are included in the development environment:
                                                                                                             
-                                                                                                                - ```yaml
+- ```yaml
                                                                                                                   services:
                                                                                                                     # ... existing services ...
 
                                                                                                                     prometheus:
                                                                                                                       image: prom/prometheus:latest
                                                                                                                       ports:
-                                                                                                                        - "9090:9090"
+- "9090:9090"
                                                                                                                       volumes:
-                                                                                                                        - ./prometheus.yml:/etc/prometheus/prometheus.yml
-                                                                                                                        - prometheus_data:/prometheus
+- ./prometheus.yml:/etc/prometheus/prometheus.yml
+- prometheus_data:/prometheus
                                                                                                                       command:
-                                                                                                                        - '--config.file=/etc/prometheus/prometheus.yml'
+- '--config.file=/etc/prometheus/prometheus.yml'
 
                                                                                                                     grafana:
                                                                                                                       image: grafana/grafana:latest
                                                                                                                       ports:
-                                                                                                                        - "3000:3000"
+- "3000:3000"
                                                                                                                       volumes:
-                                                                                                                        - grafana_data:/var/lib/grafana
-                                                                                                                        - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+- grafana_data:/var/lib/grafana
+- ./grafana/dashboards:/etc/grafana/provisioning/dashboards
                                                                                                                       environment:
-                                                                                                                        - GF_SECURITY_ADMIN_PASSWORD=admin
+- GF_SECURITY_ADMIN_PASSWORD=admin
                                                                                                                       depends_on:
-                                                                                                                        - prometheus
+- prometheus
 
                                                                                                                   volumes:
                                                                                                                     prometheus_data:
@@ -172,17 +172,17 @@ We will use **Colyseus** as our game server framework. Colyseus provides:
                                                                                                                     scrape_interval: 15s
 
                                                                                                                   scrape_configs:
-                                                                                                                    - job_name: 'cards-server'
+- job_name: 'cards-server'
                                                                                                                       static_configs:
-                                                                                                                        - targets: ['server:2567']
+- targets: ['server:2567']
                                                                                                                   ```
                                                    
                                                                                                                   #### Implementation Notes
                                                    
-                                                                                                                  - Use `prom-client` npm package for metrics
-                                                                                                                  - - Expose metrics on `/metrics` endpoint
-                                                                                                                    - - Create default Grafana dashboard for game metrics
-                                                                                                                      - - Set up alerts for critical metrics (high latency, connection drops)
+- Use `prom-client` npm package for metrics
+- - Expose metrics on `/metrics` endpoint
+- - Create default Grafana dashboard for game metrics
+- - Set up alerts for critical metrics (high latency, connection drops)
                                                             │ WebSocket
                                       ┌─────────────────────▼───────────────────────────────────────┐
                                       │                   Colyseus Server                            │
@@ -238,12 +238,12 @@ We will use **Colyseus** as our game server framework. Colyseus provides:
 
                                       The lobby handles player matchmaking:
 
-                                      - Players join the lobby room
-                                      - - System matches two players for a game
-                                        - - Players can specify game preferences
-                                          - - Automatic timeout for unmatched players
+- Players join the lobby room
+- - System matches two players for a game
+- - Players can specify game preferences
+- - Automatic timeout for unmatched players
                                            
-                                            - ```typescript
+- ```typescript
                                               // Lobby state tracks waiting players
                                               class LobbyState extends Schema {
                                                 @type({ map: Player }) waitingPlayers = new MapSchema<Player>();
@@ -334,160 +334,167 @@ We will use **Colyseus** as our game server framework. Colyseus provides:
 
                                                              ### Client Actions
 
-                                                             - `PLAY_CARD`: Play top card from player's deck
-                                                             - - `SNAP`: Attempt to claim the pile
+- `PLAY_CARD`: Play top card from player's deck
+- - `SNAP`: Attempt to claim the pile
                                                               
-                                                               - ### Server Events
+- ### Server Events
                                                               
-                                                               - - `gameStart`: Game begins, initial state sent
-                                                                 - - `cardPlayed`: A card was played
-                                                                   - - `snapResult`: Result of a snap attempt
-                                                                     - - `turnChange`: Turn changed to other player
-                                                                       - - `gameOver`: Game ended, winner announced
+- - `gameStart`: Game begins, initial state sent
+- - `cardPlayed`: A card was played
+- - `snapResult`: Result of a snap attempt
+- - `turnChange`: Turn changed to other player
+- - `gameOver`: Game ended, winner announced
                                                                         
-                                                                         - ## Implementation Phases
+- ## Implementation Phases
                                                                         
-                                                                         - ### Phase 1: Project Setup (Week 1) ✅ COMPLETE
-                                                                         - - [x] Initialize Colyseus project
-                                                                           - [x] - [x] Set up TypeScript configuration
-                                                                           - [x] - [x] Create basic server structure
-                                                                           - [x] - [x] Implement Card and Deck classes with tests
-                                                                           - [x] - [x] Set up WebSocket connection handling
-                                                                           - [x] - [x] Configure Docker development environment
-                                                                           - [x] - [x] Integrate Prometheus metrics
-                                                                           - [x] - [x] Set up Grafana dashboards
+- ### Phase 1: Project Setup (Week 1) ✅ COMPLETE
+- - [x] Initialize Colyseus project
+- [x] - [x] Set up TypeScript configuration
+- [x] - [x] Create basic server structure
+- [x] - [x] Implement Card and Deck classes with tests
+- [x] - [x] Set up WebSocket connection handling
+- [x] - [x] Configure Docker development environment
+- [x] - [x] Integrate Prometheus metrics
+- [x] - [x] Set up Grafana dashboards
                                                                           
-                                                                           - [x] ### Phase 2: Lobby System (Week 2) ✅ COMPLETE
-                                                                           - [x] - [x] Create LobbyRoom class
-                                                                           - [x] - [x] Implement matchmaking logic
-                                                                           - [x] - [x] Player queue management
-                                                                           - [x] - [x] Lobby state synchronization
-                                                                           - [x] - [x] Timeout handling for inactive players
+- [x] ### Phase 2: Lobby System (Week 2) ✅ COMPLETE
+- [x] - [x] Create LobbyRoom class
+- [x] - [x] Implement matchmaking logic
+- [x] - [x] Player queue management
+- [x] - [x] Lobby state synchronization
+- [x] - [x] Timeout handling for inactive players
                                                                           
-                                                                           - [ ] ### Phase 3: Game Room Framework (Week 2-3)
-                                                                           - [ ] - [ ] Create base GameRoom class
-                                                                           - [ ] - [ ] Implement IGameEngine interface
-                                                                           - [ ] - [ ] Room lifecycle management
-                                                                           - [ ] - [ ] State serialization setup
-                                                                           - [ ] - [ ] Client message handling
+- [x] ### Phase 3: Game Room Framework + Full Frontend ✅ COMPLETE
+- [x] Create base GameRoom abstract class
+- [x] Implement IGameEngine interface
+- [x] Room lifecycle management
+- [x] State serialization with Colyseus Schema
+- [x] Client message handling
+- [x] SnapRoom implementation with full game logic
+- [x] Complete frontend UI (HTML/CSS/JS)
+- [x] Real-time state synchronization
+- [x] Card rendering and animations
+- [x] E2E test suite with Playwright
+- [x] Comprehensive documentation (API + Frontend guides)
                                                                           
-                                                                           - [ ] ### Phase 4: Snap Game (Week 3-4)
-                                                                           - [ ] - [ ] Implement SnapState schema
-                                                                           - [ ] - [ ] Create SnapGame engine
-                                                                           - [ ] - [ ] Turn management
-                                                                           - [ ] - [ ] Snap detection and validation
-                                                                           - [ ] - [ ] Win condition checking
-                                                                           - [ ] - [ ] Game over handling
+- [x] ### Phase 4: Snap Game ✅ COMPLETE (Implemented in Phase 3)
+- [x] Implement SnapGameState schema
+- [x] Create SnapEngine game logic
+- [x] Turn management with currentTurn state
+- [x] Snap detection and validation (matching ranks)
+- [x] Win condition checking (player with all cards)
+- [x] Game over handling with winner announcement
                                                                           
-                                                                           - [ ] ### Phase 5: Testing & Polish (Week 4)
-                                                                           - [ ] - [ ] Unit tests for game logic
-                                                                           - [ ] - [ ] Integration tests for rooms
-                                                                           - [ ] - [ ] Load testing
-                                                                           - [ ] - [ ] Bug fixes
-                                                                           - [ ] - [ ] Documentation
+- [x] ### Phase 5: Testing & Documentation ✅ COMPLETE
+- [x] Unit tests for all game logic (GameRoom, IGameEngine, SnapEngine)
+- [x] Integration tests for rooms (SnapRoom full flow)
+- [x] E2E test suite (50+ tests with Playwright)
+- [x] Comprehensive API documentation
+- [x] Frontend architecture guide
+- [x] Updated README with all features
                                                                           
-                                                                           - [ ] ## Adding New Games
+- [ ] ## Adding New Games
                                                                           
-                                                                           - [ ] To add a new card game:
+- [ ] To add a new card game:
                                                                           
-                                                                           - [ ] 1. **Create game state schema** in `src/schemas/[game]State.ts`
-                                                                           - [ ] 2. **Implement game engine** in `src/games/[game]/[Game]Game.ts`
-                                                                           - [ ] 3. **Create game room** in `src/rooms/[Game]Room.ts`
-                                                                           - [ ] 4. **Register room** in server configuration
-                                                                           - [ ] 5. **Add game type** to lobby matchmaking
+- [ ] 1. **Create game state schema** in `src/schemas/[game]State.ts`
+- [ ] 2. **Implement game engine** in `src/games/[game]/[Game]Game.ts`
+- [ ] 3. **Create game room** in `src/rooms/[Game]Room.ts`
+- [ ] 4. **Register room** in server configuration
+- [ ] 5. **Add game type** to lobby matchmaking
                                                                           
-                                                                           - [ ] Example for adding "War":
+- [ ] Example for adding "War":
                                                                           
-                                                                           - [ ] ```typescript
-                                                                           - [ ] // src/games/war/WarGame.ts
-                                                                           - [ ] class WarGame implements IGameEngine {
-                                                                           - [ ]   // Implement War-specific rules
-                                                                           - [ ]   }
+- [ ] ```typescript
+- [ ] // src/games/war/WarGame.ts
+- [ ] class WarGame implements IGameEngine {
+- [ ]   // Implement War-specific rules
+- [ ]   }
                                                                           
-                                                                           - [ ]   // src/rooms/WarRoom.ts
-                                                                           - [ ]   class WarRoom extends GameRoom<WarState> {
-                                                                           - [ ]     gameType = "war";
-                                                                           - [ ]   minPlayers = 2;
-                                                                           - [ ]     maxPlayers = 2;
-                                                                           - [ ] }
+- [ ]   // src/rooms/WarRoom.ts
+- [ ]   class WarRoom extends GameRoom<WarState> {
+- [ ]     gameType = "war";
+- [ ]   minPlayers = 2;
+- [ ]     maxPlayers = 2;
+- [ ] }
                                                                           
-                                                                           - [ ] // Register in server
-                                                                           - [ ] gameServer.define("war", WarRoom);
-                                                                           - [ ] ```
+- [ ] // Register in server
+- [ ] gameServer.define("war", WarRoom);
+- [ ] ```
                                                                           
-                                                                           - [ ] ## API Endpoints
+- [ ] ## API Endpoints
                                                                           
-                                                                           - [ ] ### REST API (via Express)
+- [ ] ### REST API (via Express)
                                                                           
-                                                                           - [ ] - `GET /api/status` - Server status
-                                                                           - [ ] - `GET /api/games` - Available game types
-                                                                           - [ ] - `GET /api/lobby/count` - Players in lobby
+- [ ] - `GET /api/status` - Server status
+- [ ] - `GET /api/games` - Available game types
+- [ ] - `GET /api/lobby/count` - Players in lobby
                                                                           
-                                                                           - [ ] ### WebSocket Messages
+- [ ] ### WebSocket Messages
                                                                           
-                                                                           - [ ] #### Client to Server
-                                                                           - [ ] - `join_lobby` - Join matchmaking queue
-                                                                           - [ ] - `leave_lobby` - Leave matchmaking queue
-                                                                           - [ ] - `play_card` - Play a card (in game)
-                                                                           - [ ] - `snap` - Call snap (in Snap game)
-                                                                           - [ ] - `forfeit` - Forfeit current game
+- [ ] #### Client to Server
+- [ ] - `join_lobby` - Join matchmaking queue
+- [ ] - `leave_lobby` - Leave matchmaking queue
+- [ ] - `play_card` - Play a card (in game)
+- [ ] - `snap` - Call snap (in Snap game)
+- [ ] - `forfeit` - Forfeit current game
                                                                           
-                                                                           - [ ] #### Server to Client
-                                                                           - [ ] - `matched` - Matched with opponent, game starting
-                                                                           - [ ] - `game_state` - Full game state update
-                                                                           - [ ] - `card_played` - A card was played
-                                                                           - [ ] - `snap_result` - Result of snap attempt
-                                                                           - [ ] - `game_over` - Game ended
+- [ ] #### Server to Client
+- [ ] - `matched` - Matched with opponent, game starting
+- [ ] - `game_state` - Full game state update
+- [ ] - `card_played` - A card was played
+- [ ] - `snap_result` - Result of snap attempt
+- [ ] - `game_over` - Game ended
                                                                           
-                                                                           - [ ] ## Testing Strategy
+- [ ] ## Testing Strategy
                                                                           
-                                                                           - [ ] Following TDD principles (as per CLAUDE.md):
+- [ ] Following TDD principles (as per CLAUDE.md):
                                                                           
-                                                                           - [ ] 1. **Unit Tests**
-                                                                           - [ ]    - Card/Deck manipulation
-                                                                           - [ ]       - Game rule validation
-                                                                           - [ ]      - State transitions
+- [ ] 1. **Unit Tests**
+- [ ]    - Card/Deck manipulation
+- [ ]       - Game rule validation
+- [ ]      - State transitions
                                                                           
-                                                                           - [ ]  2. **Integration Tests**
-                                                                           - [ ]     - Room lifecycle
-                                                                           - [ ]    - Matchmaking flow
-                                                                           - [ ]       - Game completion scenarios
+- [ ]  2. **Integration Tests**
+- [ ]     - Room lifecycle
+- [ ]    - Matchmaking flow
+- [ ]       - Game completion scenarios
                                                                           
-                                                                           - [ ]   3. **E2E Tests**
-                                                                           - [ ]      - Full game playthrough
-                                                                           - [ ]     - Disconnection handling
-                                                                           - [ ]    - Reconnection scenarios
+- [ ]   3. **E2E Tests**
+- [ ]      - Full game playthrough
+- [ ]     - Disconnection handling
+- [ ]    - Reconnection scenarios
                                                                           
-                                                                           - [ ]    ## Future Considerations
+- [ ]    ## Future Considerations
                                                                           
-                                                                           - [ ]    - **Persistence**: Save game history, player stats
-                                                                           - [ ]    - **Authentication**: User accounts, sessions
-                                                                           - [ ]    - **Scaling**: Redis for multi-server deployment
-                                                                           - [ ]    - **Spectators**: Watch ongoing games
-                                                                           - [ ]    - **Tournaments**: Bracket-based competitions
-                                                                           - [ ]    - **More Games**: War, Go Fish, Crazy Eights, etc.
+- [ ]    - **Persistence**: Save game history, player stats
+- [ ]    - **Authentication**: User accounts, sessions
+- [ ]    - **Scaling**: Redis for multi-server deployment
+- [ ]    - **Spectators**: Watch ongoing games
+- [ ]    - **Tournaments**: Bracket-based competitions
+- [ ]    - **More Games**: War, Go Fish, Crazy Eights, etc.
                                                                           
-                                                                           - [ ]    ## Dependencies
+- [ ]    ## Dependencies
                                                                           
-                                                                           - [ ]    ```json
-                                                                           - [ ]    {
-                                                                           - [ ]      "dependencies": {
-                                                                           - [ ]      "colyseus": "^0.15.x",
-                                                                           - [ ]      "@colyseus/schema": "^2.0.x",
-                                                                           - [ ]      "@colyseus/monitor": "^0.15.x",
-                                                                           - [ ]      "express": "^4.18.x"
-                                                                           - [ ]    },
-                                                                           - [ ]      "devDependencies": {
-                                                                           - [ ]      "@colyseus/testing": "^0.15.x",
-                                                                           - [ ]      "typescript": "^5.x"
-                                                                           - [ ]    }
-                                                                           - [ ]    }
-                                                                           - [ ]    ```
+- [ ]    ```json
+- [ ]    {
+- [ ]      "dependencies": {
+- [ ]      "colyseus": "^0.15.x",
+- [ ]      "@colyseus/schema": "^2.0.x",
+- [ ]      "@colyseus/monitor": "^0.15.x",
+- [ ]      "express": "^4.18.x"
+- [ ]    },
+- [ ]      "devDependencies": {
+- [ ]      "@colyseus/testing": "^0.15.x",
+- [ ]      "typescript": "^5.x"
+- [ ]    }
+- [ ]    }
+- [ ]    ```
                                                                           
-                                                                           - [ ]    ## Success Metrics
+- [ ]    ## Success Metrics
                                                                           
-                                                                           - [ ]    - Players can successfully match in lobby
-                                                                           - [ ]    - Two players can complete a full game of Snap
-                                                                           - [ ]    - Game state syncs correctly between clients
-                                                                           - [ ]    - Snap detection has < 100ms latency
-                                                                           - [ ]    - New game can be added in < 1 day of development
+- [ ]    - Players can successfully match in lobby
+- [ ]    - Two players can complete a full game of Snap
+- [ ]    - Game state syncs correctly between clients
+- [ ]    - Snap detection has < 100ms latency
+- [ ]    - New game can be added in < 1 day of development

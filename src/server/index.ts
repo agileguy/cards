@@ -5,6 +5,7 @@ import { monitor } from '@colyseus/monitor';
 import { metrics } from '../utils/metrics';
 import { config } from './config';
 import { LobbyRoom } from '../rooms/LobbyRoom';
+import { SnapRoom } from '../rooms/SnapRoom';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('server');
@@ -18,6 +19,18 @@ const gameServer = new Server({
 
 // Define lobby room
 gameServer.define('lobby', LobbyRoom);
+
+// Define snap game room with matchId filtering for proper matchmaking
+// This ensures players with the same matchId join the same room
+gameServer.define('snap', SnapRoom).filterBy(['matchId']);
+
+// Serve static files from public directory
+app.use(express.static('public'));
+
+// Serve index.html for root path
+app.get('/', (req, res) => {
+  res.sendFile('index.html', { root: 'public' });
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -38,6 +51,11 @@ app.get(config.metricsPath, async (req, res) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     res.status(500).end(errorMessage);
   }
+});
+
+// Available games endpoint
+app.get('/api/games', (req, res) => {
+  res.json({ games: ['snap'] });
 });
 
 // Lobby count endpoint

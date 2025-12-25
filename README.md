@@ -6,10 +6,50 @@ A multiplayer card game server using Colyseus framework with TypeScript, Docker,
 
 - TypeScript-based Colyseus game server
 - Matchmaking lobby system with FIFO algorithm
+- Full frontend UI with real-time synchronization
+- Vanilla JavaScript with ES6 modules (no build step)
+- Comprehensive E2E testing with Playwright
 - Docker-first development environment
 - Prometheus metrics and Grafana dashboards
 - Test-driven development with comprehensive test coverage
 - Card and Deck utilities for building card games
+- Professional animations and responsive design
+
+## Frontend
+
+Access the game UI at **http://localhost:2567**
+
+### Pages
+
+- `/` - Landing page with game selection
+- `/lobby.html` - Join matchmaking queue
+- `/game.html?matchId=<id>` - Play Snap card game
+
+### Features
+
+- **Real-time multiplayer**: Colyseus WebSocket synchronization
+- **Responsive design**: Mobile, tablet, and desktop support
+- **Animations**: Smooth card dealing, snap effects, victory confetti
+- **Accessibility**: Keyboard navigation, ARIA labels, screen reader support
+- **No build step**: Vanilla JavaScript with ES6 modules
+
+### Frontend Development
+
+```bash
+# Start server (frontend served at root)
+docker compose up
+
+# Run E2E tests
+docker compose run e2e
+
+# Run E2E tests in headed mode
+docker compose run e2e npx playwright test --headed
+
+# Run E2E tests in debug mode
+docker compose run e2e npx playwright test --debug
+```
+
+See [docs/FRONTEND.md](./docs/FRONTEND.md) for complete frontend architecture guide.
 
 ## Prerequisites
 
@@ -86,25 +126,59 @@ npm run build       # Build TypeScript
 
 ```
 cards/
-├── src/
+├── src/                      # Backend (TypeScript)
 │   ├── server/
 │   │   ├── index.ts          # Server entry point
 │   │   └── config.ts         # Configuration
 │   ├── rooms/
-│   │   └── LobbyRoom.ts      # Matchmaking lobby
+│   │   ├── LobbyRoom.ts      # Matchmaking lobby
+│   │   ├── GameRoom.ts       # Abstract game base class
+│   │   └── SnapRoom.ts       # Snap game implementation
+│   ├── games/
+│   │   ├── IGameEngine.ts    # Game engine interface
+│   │   └── snap/
+│   │       └── SnapEngine.ts # Snap game logic
 │   ├── schemas/
 │   │   ├── Player.ts         # Player schema
-│   │   └── LobbyState.ts     # Lobby state schema
+│   │   ├── LobbyState.ts     # Lobby state schema
+│   │   ├── BaseGameState.ts  # Base game state
+│   │   └── SnapGameState.ts  # Snap game state
 │   └── utils/
 │       ├── Card.ts           # Card class
 │       ├── Deck.ts           # Deck class
 │       ├── Matchmaker.ts     # Matchmaking logic
 │       └── metrics.ts        # Prometheus metrics
+│
+├── public/                   # Frontend (Vanilla JS)
+│   ├── index.html            # Landing page
+│   ├── lobby.html            # Matchmaking page
+│   ├── game.html             # Game board
+│   ├── css/
+│   │   ├── style.css         # Main styles
+│   │   ├── cards.css         # Card rendering
+│   │   └── animations.css    # Animation library
+│   └── js/
+│       ├── client.js         # Colyseus client wrapper
+│       ├── lobby.js          # Lobby page logic
+│       ├── game.js           # Game page logic
+│       ├── lib/              # External libraries
+│       ├── components/       # UI components
+│       └── utils/            # Utilities
+│
 ├── tests/
 │   ├── unit/                 # Unit tests
-│   └── integration/          # Integration tests
+│   ├── integration/          # Integration tests
+│   └── e2e/                  # End-to-end tests (Playwright)
+│
+├── docs/
+│   ├── API.md                # WebSocket API documentation
+│   ├── FRONTEND.md           # Frontend architecture guide
+│   ├── PLAN.md               # Project roadmap
+│   └── TESTING.md            # Testing philosophy
+│
 ├── docker-compose.yml        # Multi-service orchestration
 ├── Dockerfile                # Multi-stage build
+├── playwright.config.ts      # E2E test configuration
 ├── prometheus.yml            # Prometheus config
 └── grafana/                  # Grafana provisioning
 ```
@@ -200,10 +274,14 @@ Access Grafana at http://localhost:3000 (admin/admin) to visualize metrics.
 - `GET /metrics` - Prometheus metrics
 - `GET /colyseus` - Colyseus monitor dashboard
 - `GET /api/lobby/count` - Get current number of waiting players in lobby
+- `GET /api/games` - List available games
 
 ### WebSocket Rooms
 
 - `ws://localhost:2567/lobby` - Matchmaking lobby room
+- `ws://localhost:2567/snap` - Snap card game room
+
+See [docs/API.md](./docs/API.md) for complete WebSocket API documentation.
 
 ## Testing Philosophy
 

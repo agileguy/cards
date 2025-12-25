@@ -96,13 +96,110 @@ console.log('Player joined');
 
 When debugging test failures or production issues:
 
-1.  Check logs for the sequence of events leading to the failure
-2.  Verify all expected operations were logged
-3.  Look for error messages with full context
-4.  Use timestamps to understand timing issues
-5.  Compare successful vs failed scenarios in logs
+1. Check logs for the sequence of events leading to the failure
+2. Verify all expected operations were logged
+3. Look for error messages with full context
+4. Use timestamps to understand timing issues
+5. Compare successful vs failed scenarios in logs
 
-         6. ## CRITICAL: Docker-First Development
+---
+
+## CRITICAL: Prometheus Metrics
+
+**ALWAYS add Prometheus metrics where appropriate during development.**
+
+Metrics are essential for observability, monitoring, and understanding system behavior in production.
+
+### Metrics Requirements
+
+1. **Add metrics for all significant operations** - Connections, matches, games, errors
+2. **Choose the right metric type** - Counter, Gauge, or Histogram
+3. **Use consistent naming** - Prefix with `cards_`, use snake_case
+4. **Add help text** - Clearly describe what each metric measures
+5. **Update tests** - Add tests for new metrics in metrics.test.ts
+
+### Metric Types
+
+```typescript
+// Counter - Monotonically increasing count (total connections, total matches)
+this.connectionsTotal = new Counter({
+  name: 'cards_connections_total',
+  help: 'Total number of connections',
+  registers: [this.register],
+});
+
+// Gauge - Value that can go up or down (active connections, waiting players)
+this.connectionsActive = new Gauge({
+  name: 'cards_connections_active',
+  help: 'Current number of active connections',
+  registers: [this.register],
+});
+
+// Histogram - Distribution of values (duration, latency)
+this.gameDuration = new Histogram({
+  name: 'cards_game_duration_seconds',
+  help: 'Game duration in seconds',
+  buckets: [10, 30, 60, 120, 300, 600],
+  registers: [this.register],
+});
+```
+
+### When to Add Metrics
+
+- **Connection events** - Track total and active connections
+- **Room lifecycle** - Track room creation, disposal, active rooms
+- **Game events** - Track games started, completed, duration
+- **Matchmaking** - Track matches found, waiting players, timeouts
+- **Performance** - Track message latency, processing time
+- **Errors** - Track error counts by type
+- **Business metrics** - Track domain-specific events
+
+### Metrics Best Practices
+
+```typescript
+// Good: Increment counter when event occurs
+metrics.lobbyMatchesTotal.inc();
+
+// Good: Set gauge to current value
+metrics.lobbyPlayersWaiting.set(this.state.getWaitingCount());
+
+// Good: Observe histogram with calculated value
+const duration = (Date.now() - startTime) / 1000;
+metrics.lobbyMatchDuration.observe(duration);
+
+// Bad: Forgetting to update metrics
+// (Always update metrics when significant events occur)
+```
+
+### Metric Naming Convention
+
+- Prefix: `cards_`
+- Format: `snake_case`
+- Suffix:
+  - `_total` for counters
+  - `_seconds` for time measurements
+  - No suffix for gauges
+
+Examples:
+- `cards_connections_total` ✅
+- `cards_lobby_players_waiting` ✅
+- `cards_game_duration_seconds` ✅
+
+### Testing Metrics
+
+Always add tests for new metrics:
+
+```typescript
+it('should increment lobby matches counter', async () => {
+  collector.lobbyMatchesTotal.inc();
+  const metricsOutput = await collector.getMetrics();
+  expect(metricsOutput).toContain('cards_lobby_matches_total 1');
+});
+```
+
+---
+
+## CRITICAL: Docker-First Development
 
          7. **ALL development MUST be done using Docker.**
 

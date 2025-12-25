@@ -1,4 +1,4 @@
-import { Player, PlayerStatus } from '../../../src/schemas/Player';
+import { Player } from '../../../src/schemas/Player';
 
 describe('Player Schema', () => {
   describe('constructor', () => {

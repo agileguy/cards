@@ -155,13 +155,9 @@ describe('LobbyRoom', () => {
       room.onCreate({});
     });
 
-    it('should be called periodically by interval', (done) => {
-      const handleTimeoutsSpy = jest.spyOn(room as any, 'handleTimeouts');
-
+    it('should be called periodically by interval', () => {
       // Wait for interval to trigger (default 5000ms, but we can test the setup)
       expect(room['timeoutInterval']).toBeDefined();
-
-      done();
     });
   });
 

@@ -113,11 +113,15 @@ describe('LobbyRoom Integration', () => {
         let count = 0;
         client1.onMessage('matched', () => {
           count++;
-          if (count === 1) resolve();
+          if (count === 1) {
+            resolve();
+          }
         });
         client2.onMessage('matched', () => {
           count++;
-          if (count === 1) resolve();
+          if (count === 1) {
+            resolve();
+          }
         });
       });
 
@@ -167,11 +171,15 @@ describe('LobbyRoom Integration', () => {
         let count = 0;
         client1.onMessage('matched', () => {
           count++;
-          if (count >= 2) resolve();
+          if (count >= 2) {
+            resolve();
+          }
         });
         client2.onMessage('matched', () => {
           count++;
-          if (count >= 2) resolve();
+          if (count >= 2) {
+            resolve();
+          }
         });
       });
 
@@ -202,35 +210,37 @@ describe('LobbyRoom Integration', () => {
   });
 
   describe('timeout handling', () => {
-    it('should send timeout message to timed out players', async () => {
-      jest.setTimeout(35000);
+    it(
+      'should send timeout message to timed out players',
+      async () => {
+        const room = await colyseus.createRoom('lobby', {});
+        const client = await colyseus.connectTo(room);
 
-      const room = await colyseus.createRoom('lobby', {});
-      const client = await colyseus.connectTo(room);
+        const timeoutPromise = new Promise<any>((resolve) => {
+          client.onMessage('timeout', (message) => resolve(message));
+        });
 
-      const timeoutPromise = new Promise<any>((resolve) => {
-        client.onMessage('timeout', (message) => resolve(message));
-      });
+        await client.send('join_lobby', { name: 'Alice' });
 
-      await client.send('join_lobby', { name: 'Alice' });
+        // Wait for state sync
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Wait for state sync
-      await new Promise((resolve) => setTimeout(resolve, 100));
+        // Manually set player joinedAt to trigger timeout
+        const player = room.state.waitingPlayers.get(client.sessionId);
+        if (player) {
+          player.joinedAt = Date.now() - 31000; // 31 seconds ago
+        }
 
-      // Manually set player joinedAt to trigger timeout
-      const player = room.state.waitingPlayers.get(client.sessionId);
-      if (player) {
-        player.joinedAt = Date.now() - 31000; // 31 seconds ago
-      }
+        // Wait for timeout check interval (5 seconds + buffer)
+        const timeoutMessage = await timeoutPromise;
 
-      // Wait for timeout check interval (5 seconds + buffer)
-      const timeoutMessage = await timeoutPromise;
+        expect(timeoutMessage).toBeDefined();
+        expect(timeoutMessage.reason).toBe('No match found in time');
 
-      expect(timeoutMessage).toBeDefined();
-      expect(timeoutMessage.reason).toBe('No match found in time');
-
-      await client.leave();
-    });
+        await client.leave();
+      },
+      15000
+    );
   });
 
   describe('state synchronization', () => {

@@ -100,7 +100,7 @@ export class LobbyRoom extends Room<LobbyState> {
   onDispose(): void {
     console.log('[LobbyRoom] onDispose:', {
       roomId: this.roomId,
-      remainingPlayers: this.state.waitingPlayers.size,
+      remainingPlayers: this.state?.waitingPlayers?.size ?? 0,
       timestamp: new Date().toISOString(),
     });
 

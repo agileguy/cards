@@ -40,7 +40,7 @@ app.get(config.metricsPath, async (req, res) => {
 // Lobby count endpoint
 app.get('/api/lobby/count', async (req, res) => {
   try {
-    const rooms = await gameServer.matchMaker.query({ name: 'lobby' });
+    const rooms = await (gameServer as any).matchMaker.query({ name: 'lobby' });
     if (rooms.length === 0 || !rooms[0].state) {
       res.json({ count: 0 });
       return;

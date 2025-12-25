@@ -5,6 +5,7 @@
   "main": "dist/server/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
     "start": "node dist/server/index.js",
     "start:dev": "ts-node-dev --watch src --respawn --transpile-only src/server/index.ts",
     "start:prod": "npm run build && node dist/server/index.js",

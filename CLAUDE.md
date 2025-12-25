@@ -309,7 +309,88 @@ it('should increment lobby matches counter', async () => {
                                                                5. 5. **Refactor if needed** while keeping tests green
                                                                   6. 6. **Update documentation** if necessary
 
-                                                                     7. ## Do NOT
+                                                                     7. ---
+
+## CRITICAL: Pre-PR Checklist
+
+**ALWAYS run these checks locally BEFORE creating a pull request.**
+
+All PRs must pass CI checks. Running these locally ensures faster iteration and prevents CI failures.
+
+### Required Checks
+
+Run all of these commands and ensure they pass:
+
+```bash
+# 1. TypeScript type checking
+npm run typecheck
+
+# 2. Build check
+npm run build
+
+# 3. Linting
+npm run lint
+
+# 4. Format checking
+npm run format:check
+
+# 5. Tests
+npm test
+
+# 6. Test coverage (should maintain 80%+)
+npm run test:coverage
+```
+
+### Docker-Based Checks
+
+Since this is a Docker-first project, you can also run checks in Docker:
+
+```bash
+# Run typecheck in Docker
+docker compose run --rm test npm run typecheck
+
+# Run build in Docker
+docker compose run --rm test npm run build
+
+# Run linting in Docker
+docker compose run --rm test npm run lint
+
+# Run format check in Docker
+docker compose run --rm test npm run format:check
+
+# Run tests in Docker
+docker compose run test
+```
+
+### What CI Checks
+
+The GitHub Actions CI workflow runs:
+- **Lint job**: ESLint and Prettier formatting
+- **Test jobs**: Tests on Node 18.x and 20.x with coverage
+
+All of these must pass before a PR can be merged.
+
+### Fixing Issues
+
+If checks fail:
+
+```bash
+# Fix linting issues automatically
+npm run lint:fix
+
+# Fix formatting issues automatically
+npm run format
+
+# Fix TypeScript errors
+# (Review compiler errors and fix manually)
+
+# Fix failing tests
+# (Review test output and fix code/tests)
+```
+
+---
+
+## Do NOT
 
                                                                      8. - Write implementation code without tests
                                                                         - - Skip tests for "simple" functions

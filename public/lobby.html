@@ -6,6 +6,15 @@
   <title>Lobby - Cards</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/animations.css">
+
+  <!-- Import map for Colyseus from CDN -->
+  <script type="importmap">
+  {
+    "imports": {
+      "colyseus.js": "https://cdn.skypack.dev/colyseus.js@0.15.28"
+    }
+  }
+  </script>
 </head>
 <body>
   <div class="container">
@@ -75,10 +84,7 @@
     });
   </script>
 
-  <!-- Load Colyseus UMD build first (creates window.Colyseus) -->
-  <script src="/js/lib/colyseus-vendored.js"></script>
-
-  <!-- Then load our ES module code -->
+  <!-- Load our ES module code (will load Colyseus from import map) -->
   <script type="module" src="/js/lobby.js"></script>
 </body>
 </html>

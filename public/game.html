@@ -76,7 +76,10 @@
     </main>
   </div>
 
-  <!-- Load Colyseus UMD build first -->
+  <!-- Load Buffer polyfill first -->
+  <script src="/js/lib/buffer-polyfill.js"></script>
+
+  <!-- Load Colyseus UMD build -->
   <script src="/js/lib/colyseus-vendored.js"></script>
 
   <!-- Then load our ES module game code -->

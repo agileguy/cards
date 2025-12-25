@@ -52,6 +52,11 @@ app.get(config.metricsPath, async (req, res) => {
   }
 });
 
+// Available games endpoint
+app.get('/api/games', (req, res) => {
+  res.json({ games: ['snap'] });
+});
+
 // Lobby count endpoint
 app.get('/api/lobby/count', async (req, res) => {
   try {

@@ -8,12 +8,12 @@ import { config } from '../../src/server/config';
 describe('Server Integration', () => {
   let app: express.Application;
   let httpServer: ReturnType<typeof createServer>;
-  let gameServer: Server;
 
   beforeAll(() => {
     app = express();
     httpServer = createServer(app);
-    gameServer = new Server({ server: httpServer });
+    // Create Colyseus server to initialize WebSocket transport
+    new Server({ server: httpServer });
 
     app.get('/health', (req, res) => {
       res.json({ status: 'ok' });
@@ -26,8 +26,10 @@ describe('Server Integration', () => {
     });
   });
 
-  afterAll((done) => {
-    httpServer.close(done);
+  afterAll(() => {
+    return new Promise<void>((resolve) => {
+      httpServer.close(() => resolve());
+    });
   });
 
   describe('GET /health', () => {

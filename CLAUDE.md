@@ -13,7 +13,20 @@ This file provides guidance for Claude Code when working on this project.
 - Basic Colyseus server with /metrics endpoint
 - Grafana dashboard setup
 
-**Next Phase:** Lobby system and matchmaking
+## Phase 2 Status: ✅ COMPLETE
+
+**Completed:**
+
+- Player and LobbyState schemas with comprehensive tests
+- Matchmaker utility with FIFO algorithm
+- LobbyRoom with full message handler implementation
+- Integration tests for matchmaking flow (10 tests passing)
+- REST API endpoint GET /api/lobby/count (4 tests passing)
+- 4 lobby metrics (players_waiting, matches_total, match_duration, timeouts)
+- Comprehensive logging throughout lobby system
+- Server integration and configuration
+
+**Next Phase:** Game room implementation
 
 ---
 

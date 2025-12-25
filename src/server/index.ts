@@ -28,7 +28,8 @@ app.get(config.metricsPath, async (req, res) => {
         const metricsData = await metrics.getMetrics();
         res.end(metricsData);
     } catch (error) {
-        res.status(500).end(error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        res.status(500).end(errorMessage);
     }
 });
 
@@ -58,16 +59,30 @@ gameServer.listen(config.port).then(() => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', async () => {
+process.on('SIGTERM', () => {
     // eslint-disable-next-line no-console
     console.log('SIGTERM received, shutting down gracefully...');
-    await gameServer.gracefullyShutdown();
-    process.exit(0);
+    gameServer.gracefullyShutdown()
+        .then(() => {
+            process.exit(0);
+        })
+        .catch((error) => {
+            // eslint-disable-next-line no-console
+            console.error('Error during graceful shutdown:', error);
+            process.exit(1);
+        });
 });
 
-process.on('SIGINT', async () => {
+process.on('SIGINT', () => {
     // eslint-disable-next-line no-console
     console.log('SIGINT received, shutting down gracefully...');
-    await gameServer.gracefullyShutdown();
-    process.exit(0);
+    gameServer.gracefullyShutdown()
+        .then(() => {
+            process.exit(0);
+        })
+        .catch((error) => {
+            // eslint-disable-next-line no-console
+            console.error('Error during graceful shutdown:', error);
+            process.exit(1);
+        });
 });

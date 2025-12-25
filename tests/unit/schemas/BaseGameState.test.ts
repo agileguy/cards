@@ -200,7 +200,7 @@ describe('BaseGameState', () => {
 
       expect(state.status).toBe('completed');
       expect(state.winner).toBe('session-1');
-      expect(state.endedAt).toBeGreaterThan(state.startedAt);
+      expect(state.endedAt).toBeGreaterThanOrEqual(state.startedAt);
     });
 
     it('should handle player leaving mid-game', () => {

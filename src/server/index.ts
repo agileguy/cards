@@ -4,6 +4,7 @@ import express from 'express';
 import { monitor } from '@colyseus/monitor';
 import { metrics } from '../utils/metrics';
 import { config } from './config';
+import { LobbyRoom } from '../rooms/LobbyRoom';
 
 const app = express();
 const httpServer = createServer(app);
@@ -11,6 +12,9 @@ const httpServer = createServer(app);
 const gameServer = new Server({
   server: httpServer,
 });
+
+// Define lobby room
+gameServer.define('lobby', LobbyRoom);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -30,6 +34,22 @@ app.get(config.metricsPath, async (req, res) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     res.status(500).end(errorMessage);
+  }
+});
+
+// Lobby count endpoint
+app.get('/api/lobby/count', async (req, res) => {
+  try {
+    const rooms = await gameServer.matchMaker.query({ name: 'lobby' });
+    if (rooms.length === 0 || !rooms[0].state) {
+      res.json({ count: 0 });
+      return;
+    }
+    const count = rooms[0].state.getWaitingCount();
+    res.json({ count });
+  } catch (error) {
+    // If query fails, assume no lobby exists
+    res.json({ count: 0 });
   }
 });
 

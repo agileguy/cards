@@ -51,6 +51,69 @@ This is non-negotiable. Every feature, bug fix, or change MUST follow this workf
 
 Logging is essential for debugging test failures, production issues, and understanding system behavior.
 
+### Using the Debug Logger
+
+**NEVER use console.log, console.warn, or console.error directly.** Instead, use the `createLogger` utility from `src/utils/logger.ts`:
+
+```typescript
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('lobby'); // Create a namespaced logger
+
+// Info logging
+log('Player joined:', {
+  sessionId: client.sessionId,
+  name: playerName,
+  waitingCount: this.state.getWaitingCount(),
+  timestamp: new Date().toISOString(),
+});
+
+// Warning logging
+log.warn('Player not found in state:', {
+  sessionId: client.sessionId,
+});
+
+// Error logging
+log.error('Match failed:', {
+  error: error.message,
+  player1: match.player1SessionId,
+  player2: match.player2SessionId,
+  stack: error.stack,
+});
+```
+
+### Enabling Debug Logs
+
+Logs are **disabled by default in production**. Enable them using the `DEBUG` environment variable:
+
+```bash
+# Enable all cards logs
+DEBUG=cards:* npm start
+
+# Enable only lobby logs
+DEBUG=cards:lobby npm start
+
+# Enable multiple namespaces
+DEBUG=cards:lobby,cards:server npm start
+
+# Enable all logs (including dependencies)
+DEBUG=* npm start
+```
+
+In Docker:
+```bash
+docker compose run -e DEBUG=cards:* server npm start
+```
+
+### Logger Namespaces
+
+Use descriptive namespaces for different modules:
+
+- `cards:server` - Server startup, shutdown, configuration
+- `cards:lobby` - Lobby room operations
+- `cards:matchmaker` - Matchmaking logic
+- `cards:game` - Game room operations
+
 ### Logging Requirements
 
 1. **Log all critical operations** - Room lifecycle, matchmaking, state changes
@@ -64,23 +127,31 @@ Logging is essential for debugging test failures, production issues, and underst
 
 ```typescript
 // Good: Detailed logging with context
-console.log('[LobbyRoom] Player joined:', {
+log('Player joined:', {
   sessionId: client.sessionId,
   name: playerName,
   waitingCount: this.state.getWaitingCount(),
   timestamp: new Date().toISOString(),
 });
 
+// Good: Warning logging
+log.warn('Unexpected state:', {
+  expected: 'waiting',
+  actual: player.status,
+});
+
 // Good: Error logging with full context
-console.error('[LobbyRoom] Match failed:', {
+log.error('Database query failed:', {
   error: error.message,
-  player1: match.player1SessionId,
-  player2: match.player2SessionId,
+  query: queryString,
   stack: error.stack,
 });
 
+// Bad: Using console.log directly
+console.log('Player joined'); // DON'T DO THIS
+
 // Bad: Minimal logging
-console.log('Player joined');
+log('Player joined'); // Too little context
 ```
 
 ### When to Add Logging
@@ -96,11 +167,20 @@ console.log('Player joined');
 
 When debugging test failures or production issues:
 
-1. Check logs for the sequence of events leading to the failure
-2. Verify all expected operations were logged
-3. Look for error messages with full context
-4. Use timestamps to understand timing issues
-5. Compare successful vs failed scenarios in logs
+1. Enable debug logs: `DEBUG=cards:* npm test`
+2. Check logs for the sequence of events leading to the failure
+3. Verify all expected operations were logged
+4. Look for error messages with full context
+5. Use timestamps to understand timing issues
+6. Compare successful vs failed scenarios in logs
+
+### Benefits of Debug Logger
+
+- **Security**: No sensitive data leaked to production logs by default
+- **Performance**: Zero overhead when disabled (logs compiled out)
+- **Flexibility**: Enable/disable logs per namespace without code changes
+- **Clarity**: Namespaced logs make it easy to filter and search
+- **Production-safe**: Logs only appear when explicitly enabled
 
 ---
 

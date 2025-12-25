@@ -51,6 +51,28 @@ docker compose run test npm run test:watch
 docker compose run test npm run test:coverage
 ```
 
+### Debug Logging
+
+The application uses the `debug` package for structured logging. Logs are **disabled by default** in production. Enable them using the `DEBUG` environment variable:
+
+```bash
+# Enable all logs
+DEBUG=cards:* docker compose up
+
+# Enable specific namespace logs
+DEBUG=cards:lobby docker compose up
+DEBUG=cards:server docker compose up
+
+# Enable multiple namespaces
+DEBUG=cards:lobby,cards:server docker compose up
+```
+
+Available namespaces:
+- `cards:server` - Server startup, shutdown, configuration
+- `cards:lobby` - Lobby room operations, matchmaking
+
+The logger is production-safe - no logs are emitted unless explicitly enabled.
+
 ### Local Development (without Docker)
 
 ```bash

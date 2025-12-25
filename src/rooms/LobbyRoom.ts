@@ -3,13 +3,16 @@ import { LobbyState } from '../schemas/LobbyState';
 import { Player } from '../schemas/Player';
 import { Matchmaker } from '../utils/Matchmaker';
 import { metrics } from '../utils/metrics';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('lobby');
 
 export class LobbyRoom extends Room<LobbyState> {
   private matchmaker: Matchmaker;
   private timeoutInterval: NodeJS.Timeout;
 
   onCreate(options: any): void {
-    console.log('[LobbyRoom] onCreate:', {
+    log('onCreate:', {
       roomId: this.roomId,
       options,
       timestamp: new Date().toISOString(),
@@ -32,7 +35,7 @@ export class LobbyRoom extends Room<LobbyState> {
       this.handleTimeouts();
     }, 5000);
 
-    console.log('[LobbyRoom] onCreate complete:', {
+    log('onCreate complete:', {
       roomId: this.roomId,
       matchmakerTimeout: 30000,
       checkInterval: 5000,
@@ -41,7 +44,7 @@ export class LobbyRoom extends Room<LobbyState> {
 
   onJoin(client: Client, options: any): void {
     const playerName = options.name || 'Player';
-    console.log('[LobbyRoom] onJoin:', {
+    log('onJoin:', {
       sessionId: client.sessionId,
       name: playerName,
       roomId: this.roomId,
@@ -51,7 +54,7 @@ export class LobbyRoom extends Room<LobbyState> {
     const player = new Player(client.sessionId, playerName);
     const added = this.state.addPlayer(player);
 
-    console.log('[LobbyRoom] Player added to state:', {
+    log('Player added to state:', {
       sessionId: client.sessionId,
       added,
       totalPlayers: this.state.waitingPlayers.size,
@@ -63,7 +66,7 @@ export class LobbyRoom extends Room<LobbyState> {
   }
 
   onLeave(client: Client, consented: boolean): void {
-    console.log('[LobbyRoom] onLeave:', {
+    log('onLeave:', {
       sessionId: client.sessionId,
       consented,
       roomId: this.roomId,
@@ -73,7 +76,7 @@ export class LobbyRoom extends Room<LobbyState> {
     const player = this.state.waitingPlayers.get(client.sessionId);
 
     if (!player) {
-      console.warn('[LobbyRoom] Player not found in state:', {
+      log.warn('Player not found in state:', {
         sessionId: client.sessionId,
       });
       return;
@@ -81,13 +84,13 @@ export class LobbyRoom extends Room<LobbyState> {
 
     if (consented) {
       this.state.removePlayer(client.sessionId);
-      console.log('[LobbyRoom] Player removed (consented):', {
+      log('Player removed (consented):', {
         sessionId: client.sessionId,
         remainingPlayers: this.state.waitingPlayers.size,
       });
     } else {
       player.setStatus('disconnected');
-      console.log('[LobbyRoom] Player marked disconnected:', {
+      log('Player marked disconnected:', {
         sessionId: client.sessionId,
         waitingCount: this.state.getWaitingCount(),
       });
@@ -98,7 +101,7 @@ export class LobbyRoom extends Room<LobbyState> {
   }
 
   onDispose(): void {
-    console.log('[LobbyRoom] onDispose:', {
+    log('onDispose:', {
       roomId: this.roomId,
       remainingPlayers: this.state?.waitingPlayers?.size ?? 0,
       timestamp: new Date().toISOString(),
@@ -106,12 +109,12 @@ export class LobbyRoom extends Room<LobbyState> {
 
     if (this.timeoutInterval) {
       clearInterval(this.timeoutInterval);
-      console.log('[LobbyRoom] Timeout interval cleared');
+      log('Timeout interval cleared');
     }
   }
 
   private handleJoinLobby(client: Client, message: any): void {
-    console.log('[LobbyRoom] handleJoinLobby:', {
+    log('handleJoinLobby:', {
       sessionId: client.sessionId,
       message,
       timestamp: new Date().toISOString(),
@@ -125,7 +128,7 @@ export class LobbyRoom extends Room<LobbyState> {
     );
     client.send('joined_lobby', { sessionId: client.sessionId, waitingCount });
 
-    console.log('[LobbyRoom] Sent joined_lobby message:', {
+    log('Sent joined_lobby message:', {
       sessionId: client.sessionId,
       waitingCount,
     });
@@ -135,7 +138,7 @@ export class LobbyRoom extends Room<LobbyState> {
   }
 
   private handleLeaveLobby(client: Client): void {
-    console.log('[LobbyRoom] handleLeaveLobby:', {
+    log('handleLeaveLobby:', {
       sessionId: client.sessionId,
       timestamp: new Date().toISOString(),
     });
@@ -143,7 +146,7 @@ export class LobbyRoom extends Room<LobbyState> {
     const removed = this.state.removePlayer(client.sessionId);
     client.send('left_lobby', {});
 
-    console.log('[LobbyRoom] Player left lobby:', {
+    log('Player left lobby:', {
       sessionId: client.sessionId,
       removed,
       remainingPlayers: this.state.waitingPlayers.size,
@@ -154,7 +157,7 @@ export class LobbyRoom extends Room<LobbyState> {
     const timedOutIds = this.matchmaker.getTimedOutPlayers(this.state);
 
     if (timedOutIds.length > 0) {
-      console.log('[LobbyRoom] handleTimeouts:', {
+      log('handleTimeouts:', {
         timedOutCount: timedOutIds.length,
         timedOutIds,
         timestamp: new Date().toISOString(),
@@ -166,7 +169,7 @@ export class LobbyRoom extends Room<LobbyState> {
       if (client) {
         client.send('timeout', { reason: 'No match found in time' });
         this.state.removePlayer(sessionId);
-        console.log('[LobbyRoom] Player timed out:', {
+        log('Player timed out:', {
           sessionId,
           remainingPlayers: this.state.waitingPlayers.size,
         });
@@ -189,7 +192,7 @@ export class LobbyRoom extends Room<LobbyState> {
       return;
     }
 
-    console.log('[LobbyRoom] attemptMatch:', {
+    log('attemptMatch:', {
       waitingCount,
       timestamp: new Date().toISOString(),
     });
@@ -197,13 +200,13 @@ export class LobbyRoom extends Room<LobbyState> {
     const match = this.matchmaker.findMatch(this.state);
 
     if (!match) {
-      console.log('[LobbyRoom] No match found despite waiting players:', {
+      log('No match found despite waiting players:', {
         waitingCount,
       });
       return;
     }
 
-    console.log('[LobbyRoom] Match found:', {
+    log('Match found:', {
       matchId: match.matchId,
       player1: match.player1SessionId,
       player2: match.player2SessionId,
@@ -232,7 +235,7 @@ export class LobbyRoom extends Room<LobbyState> {
           opponentSessionId: match.player2SessionId,
           matchedAt: match.matchedAt,
         });
-        console.log('[LobbyRoom] Sent matched message to player1:', {
+        log('Sent matched message to player1:', {
           sessionId: match.player1SessionId,
           matchId: match.matchId,
         });
@@ -244,7 +247,7 @@ export class LobbyRoom extends Room<LobbyState> {
           opponentSessionId: match.player1SessionId,
           matchedAt: match.matchedAt,
         });
-        console.log('[LobbyRoom] Sent matched message to player2:', {
+        log('Sent matched message to player2:', {
           sessionId: match.player2SessionId,
           matchId: match.matchId,
         });
@@ -258,7 +261,7 @@ export class LobbyRoom extends Room<LobbyState> {
       const matchDuration =
         (match.matchedAt - Math.min(player1.joinedAt, player2.joinedAt)) / 1000;
 
-      console.log('[LobbyRoom] Match complete:', {
+      log('Match complete:', {
         matchId: match.matchId,
         matchDurationSeconds: matchDuration,
         remainingPlayers: this.state.waitingPlayers.size,
@@ -270,7 +273,7 @@ export class LobbyRoom extends Room<LobbyState> {
       metrics.lobbyMatchDuration.observe(matchDuration);
       metrics.lobbyPlayersWaiting.set(this.state.getWaitingCount());
     } else {
-      console.error('[LobbyRoom] Match failed - players not found:', {
+      log.error('Match failed - players not found:', {
         player1Found: !!player1,
         player2Found: !!player2,
         match,

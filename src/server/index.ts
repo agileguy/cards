@@ -5,6 +5,9 @@ import { monitor } from '@colyseus/monitor';
 import { metrics } from '../utils/metrics';
 import { config } from './config';
 import { LobbyRoom } from '../rooms/LobbyRoom';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('server');
 
 const app = express();
 const httpServer = createServer(app);
@@ -58,60 +61,50 @@ app.use(config.monitorPath, monitor());
 
 // Track connections
 gameServer.onShutdown(() => {
-  // eslint-disable-next-line no-console
-  console.log('Server shutting down...');
+  log('Server shutting down...');
 });
 
 // Start server
 gameServer
   .listen(config.port)
   .then(() => {
-    // eslint-disable-next-line no-console
-    console.log(`✅ Colyseus server listening on port ${config.port}`);
-    // eslint-disable-next-line no-console
-    console.log(
+    log(`✅ Colyseus server listening on port ${config.port}`);
+    log(
       `📊 Metrics available at http://localhost:${config.port}${config.metricsPath}`
     );
-    // eslint-disable-next-line no-console
-    console.log(
+    log(
       `🎮 Monitor available at http://localhost:${config.port}${config.monitorPath}`
     );
-    // eslint-disable-next-line no-console
-    console.log(`❤️  Health check at http://localhost:${config.port}/health`);
+    log(`❤️  Health check at http://localhost:${config.port}/health`);
   })
   .catch((error) => {
-    // eslint-disable-next-line no-console
-    console.error('❌ Failed to start server:', error);
+    log.error('❌ Failed to start server:', error);
     process.exit(1);
   });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  // eslint-disable-next-line no-console
-  console.log('SIGTERM received, shutting down gracefully...');
+  log('SIGTERM received, shutting down gracefully...');
   gameServer
     .gracefullyShutdown()
     .then(() => {
       process.exit(0);
     })
     .catch((error) => {
-      // eslint-disable-next-line no-console
-      console.error('Error during graceful shutdown:', error);
+      log.error('Error during graceful shutdown:', error);
       process.exit(1);
     });
 });
 
 process.on('SIGINT', () => {
-  // eslint-disable-next-line no-console
-  console.log('SIGINT received, shutting down gracefully...');
+  log('SIGINT received, shutting down gracefully...');
   gameServer
     .gracefullyShutdown()
     .then(() => {
       process.exit(0);
     })
     .catch((error) => {
-      // eslint-disable-next-line no-console
-      console.error('Error during graceful shutdown:', error);
+      log.error('Error during graceful shutdown:', error);
       process.exit(1);
     });
 });

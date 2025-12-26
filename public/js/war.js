@@ -114,6 +114,12 @@ function updateBattleArea() {
   const players = Array.from(gameState.players.values());
   const opponent = players.find(p => p.sessionId !== mySessionId);
 
+  console.log('=== UPDATE BATTLE AREA ===');
+  console.log('Battle pile length:', battleCards.length);
+  console.log('Battle cards:', battleCards);
+  console.log('Players:', players);
+  console.log('My session ID:', mySessionId);
+
   // Clear both slots
   clearCards(playerSlot);
   clearCards(opponentSlot);
@@ -138,6 +144,9 @@ function updateBattleArea() {
   const myIndex = player1Id === mySessionId ? 0 : 1;
   const opponentIndex = myIndex === 0 ? 1 : 0;
 
+  console.log('Player 1 ID:', player1Id);
+  console.log('My index:', myIndex, 'Opponent index:', opponentIndex);
+
   // Get the last card for each player from the battle pile
   let myLastCard = null;
   let opponentLastCard = null;
@@ -150,6 +159,9 @@ function updateBattleArea() {
     opponentLastCard = battleCards[i];
   }
 
+  console.log('My last card:', myLastCard);
+  console.log('Opponent last card:', opponentLastCard);
+
   // Display my card
   if (myLastCard) {
     if (myLastCard.faceUp) {
@@ -159,6 +171,11 @@ function updateBattleArea() {
       const cardBack = createCardBack();
       playerSlot.appendChild(cardBack);
     }
+  } else {
+    const playerPlaceholder = document.createElement('div');
+    playerPlaceholder.className = 'slot-placeholder';
+    playerPlaceholder.textContent = 'Waiting...';
+    playerSlot.appendChild(playerPlaceholder);
   }
 
   // Display opponent's card
@@ -170,6 +187,11 @@ function updateBattleArea() {
       const cardBack = createCardBack();
       opponentSlot.appendChild(cardBack);
     }
+  } else {
+    const opponentPlaceholder = document.createElement('div');
+    opponentPlaceholder.className = 'slot-placeholder';
+    opponentPlaceholder.textContent = 'Waiting...';
+    opponentSlot.appendChild(opponentPlaceholder);
   }
 }
 

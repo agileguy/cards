@@ -250,15 +250,102 @@ export class WarEngine implements IGameEngine<WarGameState> {
 
   /**
    * Handle WAR mechanism
-   * Stub for now - will be implemented in Commit 8
+   * When ranks match, each player plays 3 face-down cards + 1 face-up card
+   * Winner of face-up battle takes all cards
+   * Supports nested wars (matching ranks during war)
    */
   private handleWar(state: WarGameState): void {
-    log('handleWar called (stub)');
+    log('WAR! Ranks matched, starting war mechanism');
 
-    // Stub implementation: Just clear and continue
-    state.clearBattlePile();
-    state.clearPlayersReady();
-    state.roundNumber++;
+    state.inWar = true;
+    state.warDepth++;
+
+    const players = Array.from(state.players.keys());
+
+    // Check if both players have enough cards for war (need 4: 3 face-down + 1 face-up)
+    const player1Hand = state.playerHands.get(players[0]);
+    const player2Hand = state.playerHands.get(players[1]);
+
+    if (!player1Hand || !player2Hand) {
+      log.error('Player hand not found during war');
+      state.inWar = false;
+      state.warDepth--;
+      return;
+    }
+
+    // If either player has insufficient cards, they lose immediately
+    if (player1Hand.length < 4) {
+      log('Player 1 has insufficient cards for war, Player 2 wins');
+      this.awardBattlePile(state, players[1]);
+      // Also give remaining cards from player 1 to player 2
+      while (player1Hand.length > 0) {
+        const card = player1Hand.shift();
+        if (card) {
+          player2Hand.push(card);
+        }
+      }
+      state.inWar = false;
+      state.warDepth--;
+      state.roundNumber++;
+      state.clearPlayersReady();
+      return;
+    }
+
+    if (player2Hand.length < 4) {
+      log('Player 2 has insufficient cards for war, Player 1 wins');
+      this.awardBattlePile(state, players[0]);
+      // Also give remaining cards from player 2 to player 1
+      while (player2Hand.length > 0) {
+        const card = player2Hand.shift();
+        if (card) {
+          player1Hand.push(card);
+        }
+      }
+      state.inWar = false;
+      state.warDepth--;
+      state.roundNumber++;
+      state.clearPlayersReady();
+      return;
+    }
+
+    // Both players have enough cards, proceed with war
+    log('Both players have enough cards, proceeding with war');
+
+    // Each player plays 3 face-down cards
+    for (let i = 0; i < 3; i++) {
+      const card1 = player1Hand.shift();
+      const card2 = player2Hand.shift();
+
+      if (card1 && card2) {
+        card1.faceUp = false; // Face-down
+        card2.faceUp = false; // Face-down
+        state.addToBattlePile(card1);
+        state.addToBattlePile(card2);
+      }
+    }
+
+    // Each player plays 1 face-up card
+    const faceUpCard1 = player1Hand.shift();
+    const faceUpCard2 = player2Hand.shift();
+
+    if (faceUpCard1 && faceUpCard2) {
+      faceUpCard1.faceUp = true;
+      faceUpCard2.faceUp = true;
+      state.addToBattlePile(faceUpCard1);
+      state.addToBattlePile(faceUpCard2);
+    }
+
+    log('War cards played, resolving battle', {
+      battlePileSize: state.battlePile.length,
+      warDepth: state.warDepth,
+    });
+
+    // Reset war state before recursion
+    state.inWar = false;
+    state.warDepth--;
+
+    // Recursively resolve the battle (may trigger another war)
+    this.resolveBattle(state);
   }
 
   /**

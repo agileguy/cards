@@ -737,4 +737,228 @@ describe('WarEngine', () => {
       expect(state.roundNumber).toBe(initialRound + 1);
     });
   });
+
+  describe('win conditions', () => {
+    let state: WarGameState;
+
+    beforeEach(() => {
+      state = engine.initialize([player1, player2]);
+    });
+
+    describe('isGameOver', () => {
+      it('should return false when both players have cards', () => {
+        state.initializeHand('session-1', [
+          new WarCard('hearts', 5),
+          new WarCard('hearts', 10),
+        ]);
+        state.initializeHand('session-2', [
+          new WarCard('clubs', 3),
+          new WarCard('clubs', 7),
+        ]);
+
+        expect(engine.isGameOver(state)).toBe(false);
+      });
+
+      it('should return true when player 1 has 0 cards', () => {
+        state.initializeHand('session-1', []);
+        state.initializeHand('session-2', [
+          new WarCard('clubs', 3),
+          new WarCard('clubs', 7),
+        ]);
+
+        expect(engine.isGameOver(state)).toBe(true);
+      });
+
+      it('should return true when player 2 has 0 cards', () => {
+        state.initializeHand('session-1', [
+          new WarCard('hearts', 5),
+          new WarCard('hearts', 10),
+        ]);
+        state.initializeHand('session-2', []);
+
+        expect(engine.isGameOver(state)).toBe(true);
+      });
+
+      it('should return true when one player has all 52 cards', () => {
+        const allCards = [];
+        for (let suit of ['hearts', 'diamonds', 'clubs', 'spades'] as const) {
+          for (let rank = 1; rank <= 13; rank++) {
+            allCards.push(new WarCard(suit, rank));
+          }
+        }
+
+        state.initializeHand('session-1', allCards);
+        state.initializeHand('session-2', []);
+
+        expect(engine.isGameOver(state)).toBe(true);
+        expect(state.getHandSize('session-1')).toBe(52);
+      });
+
+      it('should return false at game start (26 cards each)', () => {
+        expect(engine.isGameOver(state)).toBe(false);
+      });
+    });
+
+    describe('getWinner', () => {
+      it('should return null when both players have cards', () => {
+        state.initializeHand('session-1', [new WarCard('hearts', 5)]);
+        state.initializeHand('session-2', [new WarCard('clubs', 3)]);
+
+        expect(engine.getWinner(state)).toBeNull();
+      });
+
+      it('should return session-1 when player 2 has no cards', () => {
+        state.initializeHand('session-1', [new WarCard('hearts', 5)]);
+        state.initializeHand('session-2', []);
+
+        expect(engine.getWinner(state)).toBe('session-1');
+      });
+
+      it('should return session-2 when player 1 has no cards', () => {
+        state.initializeHand('session-1', []);
+        state.initializeHand('session-2', [new WarCard('clubs', 3)]);
+
+        expect(engine.getWinner(state)).toBe('session-2');
+      });
+
+      it('should return winner when they have all 52 cards', () => {
+        const allCards = [];
+        for (let suit of ['hearts', 'diamonds', 'clubs', 'spades'] as const) {
+          for (let rank = 1; rank <= 13; rank++) {
+            allCards.push(new WarCard(suit, rank));
+          }
+        }
+
+        state.initializeHand('session-1', allCards);
+        state.initializeHand('session-2', []);
+
+        expect(engine.getWinner(state)).toBe('session-1');
+        expect(engine.isGameOver(state)).toBe(true);
+      });
+
+      it('should return null at game start', () => {
+        expect(engine.getWinner(state)).toBeNull();
+      });
+    });
+
+    describe('full game simulation', () => {
+      it('should play multiple rounds until winner', () => {
+        // Setup: Player 1 has all high cards, Player 2 has all low cards
+        state.initializeHand('session-1', [
+          new WarCard('hearts', 13), // Ace
+          new WarCard('hearts', 12), // King
+          new WarCard('hearts', 11), // Queen
+        ]);
+        state.initializeHand('session-2', [
+          new WarCard('clubs', 1),
+          new WarCard('clubs', 2),
+          new WarCard('clubs', 3),
+        ]);
+
+        let rounds = 0;
+        const maxRounds = 10;
+
+        while (!engine.isGameOver(state) && rounds < maxRounds) {
+          // Both players flip
+          engine.processAction(state, {
+            type: 'FLIP_CARD',
+            playerId: 'session-1',
+          });
+          engine.processAction(state, {
+            type: 'FLIP_CARD',
+            playerId: 'session-2',
+          });
+          rounds++;
+        }
+
+        expect(engine.isGameOver(state)).toBe(true);
+        expect(engine.getWinner(state)).toBe('session-1');
+        expect(state.getHandSize('session-1')).toBe(6);
+        expect(state.getHandSize('session-2')).toBe(0);
+        expect(rounds).toBe(3); // 3 rounds to collect all cards
+      });
+
+      it('should handle game ending during war (insufficient cards)', () => {
+        // Player 1 has 5 cards, Player 2 has 3 cards (not enough for war)
+        state.initializeHand('session-1', [
+          new WarCard('hearts', 7), // Triggers war
+          new WarCard('hearts', 1),
+          new WarCard('hearts', 2),
+          new WarCard('hearts', 3),
+          new WarCard('hearts', 10),
+        ]);
+        state.initializeHand('session-2', [
+          new WarCard('clubs', 7), // Triggers war
+          new WarCard('clubs', 1),
+          new WarCard('clubs', 2),
+        ]);
+
+        // Both flip, triggering war
+        engine.processAction(state, {
+          type: 'FLIP_CARD',
+          playerId: 'session-1',
+        });
+        engine.processAction(state, {
+          type: 'FLIP_CARD',
+          playerId: 'session-2',
+        });
+
+        // Player 2 doesn't have enough cards for war, Player 1 wins
+        expect(engine.isGameOver(state)).toBe(true);
+        expect(engine.getWinner(state)).toBe('session-1');
+        expect(state.getHandSize('session-2')).toBe(0);
+      });
+
+      it('should correctly track rounds across multiple battles', () => {
+        state.initializeHand('session-1', [
+          new WarCard('hearts', 10),
+          new WarCard('hearts', 8),
+          new WarCard('hearts', 6),
+        ]);
+        state.initializeHand('session-2', [
+          new WarCard('clubs', 5),
+          new WarCard('clubs', 3),
+          new WarCard('clubs', 1),
+        ]);
+
+        expect(state.roundNumber).toBe(0);
+
+        // Round 1
+        engine.processAction(state, {
+          type: 'FLIP_CARD',
+          playerId: 'session-1',
+        });
+        engine.processAction(state, {
+          type: 'FLIP_CARD',
+          playerId: 'session-2',
+        });
+        expect(state.roundNumber).toBe(1);
+
+        // Round 2
+        engine.processAction(state, {
+          type: 'FLIP_CARD',
+          playerId: 'session-1',
+        });
+        engine.processAction(state, {
+          type: 'FLIP_CARD',
+          playerId: 'session-2',
+        });
+        expect(state.roundNumber).toBe(2);
+
+        // Round 3
+        engine.processAction(state, {
+          type: 'FLIP_CARD',
+          playerId: 'session-1',
+        });
+        engine.processAction(state, {
+          type: 'FLIP_CARD',
+          playerId: 'session-2',
+        });
+        expect(state.roundNumber).toBe(3);
+
+        expect(engine.isGameOver(state)).toBe(true);
+        expect(engine.getWinner(state)).toBe('session-1');
+      });
+    });
+  });
 });

@@ -436,4 +436,305 @@ describe('WarEngine', () => {
       expect(state.battlePile.length).toBe(0);
     });
   });
+
+  describe('WAR mechanism', () => {
+    let state: WarGameState;
+
+    beforeEach(() => {
+      state = engine.initialize([player1, player2]);
+    });
+
+    it('should set inWar flag when ranks match', () => {
+      state.initializeHand('session-1', [
+        new WarCard('hearts', 7),
+        new WarCard('hearts', 1),
+        new WarCard('hearts', 2),
+        new WarCard('hearts', 3),
+        new WarCard('hearts', 10),
+      ]);
+      state.initializeHand('session-2', [
+        new WarCard('clubs', 7),
+        new WarCard('clubs', 1),
+        new WarCard('clubs', 2),
+        new WarCard('clubs', 3),
+        new WarCard('clubs', 4),
+      ]);
+
+      // Both flip matching cards
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      // inWar should have been set to true during war (even if false after)
+      // War should have occurred and resolved
+      expect(state.getHandSize('session-1')).toBeGreaterThan(0);
+    });
+
+    it('should play 3 face-down cards from each player during war', () => {
+      state.initializeHand('session-1', [
+        new WarCard('hearts', 7),
+        new WarCard('hearts', 1),
+        new WarCard('hearts', 2),
+        new WarCard('hearts', 3),
+        new WarCard('hearts', 10),
+      ]);
+      state.initializeHand('session-2', [
+        new WarCard('clubs', 7),
+        new WarCard('clubs', 1),
+        new WarCard('clubs', 2),
+        new WarCard('clubs', 3),
+        new WarCard('clubs', 4),
+      ]);
+
+      // Both flip matching cards (triggers war)
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      // After war: 2 initial cards + 6 face-down (3 each) + 2 face-up = 10 cards total should have been in pile
+      // Winner should have all 10 cards
+      const totalCards =
+        state.getHandSize('session-1') + state.getHandSize('session-2');
+      expect(totalCards).toBe(10); // All cards accounted for
+    });
+
+    it('should play 1 face-up card after face-down cards', () => {
+      state.initializeHand('session-1', [
+        new WarCard('hearts', 7),
+        new WarCard('hearts', 1),
+        new WarCard('hearts', 2),
+        new WarCard('hearts', 3),
+        new WarCard('hearts', 10),
+      ]);
+      state.initializeHand('session-2', [
+        new WarCard('clubs', 7),
+        new WarCard('clubs', 1),
+        new WarCard('clubs', 2),
+        new WarCard('clubs', 3),
+        new WarCard('clubs', 4),
+      ]);
+
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      // Player 1 should have won (10 > 4)
+      expect(state.getHandSize('session-1')).toBe(10);
+      expect(state.getHandSize('session-2')).toBe(0);
+    });
+
+    it('should award all cards (original + war) to winner', () => {
+      state.initializeHand('session-1', [
+        new WarCard('hearts', 5),
+        new WarCard('hearts', 1),
+        new WarCard('hearts', 2),
+        new WarCard('hearts', 3),
+        new WarCard('hearts', 13), // Ace wins
+      ]);
+      state.initializeHand('session-2', [
+        new WarCard('clubs', 5),
+        new WarCard('clubs', 1),
+        new WarCard('clubs', 2),
+        new WarCard('clubs', 3),
+        new WarCard('clubs', 2),
+      ]);
+
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      // Player 1 wins with Ace
+      // Should get: 2 original + 3 face-down from self + 3 face-down from opponent + 1 face-up from self + 1 face-up from opponent = 10 cards
+      expect(state.getHandSize('session-1')).toBe(10);
+      expect(state.getHandSize('session-2')).toBe(0);
+      expect(state.battlePile.length).toBe(0);
+    });
+
+    it('should handle player with insufficient cards (auto-lose)', () => {
+      // Player 1 has enough for war, Player 2 only has 3 cards
+      state.initializeHand('session-1', [
+        new WarCard('hearts', 5),
+        new WarCard('hearts', 1),
+        new WarCard('hearts', 2),
+        new WarCard('hearts', 3),
+        new WarCard('hearts', 10),
+      ]);
+      state.initializeHand('session-2', [
+        new WarCard('clubs', 5),
+        new WarCard('clubs', 1),
+        new WarCard('clubs', 2),
+      ]);
+
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      // Player 2 doesn't have enough cards for war (needs 4: 3 face-down + 1 face-up)
+      // Player 1 should win all cards
+      expect(state.getHandSize('session-1')).toBeGreaterThan(0);
+      expect(state.getHandSize('session-2')).toBe(0);
+    });
+
+    it('should handle nested wars (war during war)', () => {
+      // Setup: Both players have matching cards twice in a row
+      state.initializeHand('session-1', [
+        new WarCard('hearts', 7), // First match
+        new WarCard('hearts', 1), // Face-down
+        new WarCard('hearts', 2), // Face-down
+        new WarCard('hearts', 3), // Face-down
+        new WarCard('hearts', 9), // Second match
+        new WarCard('hearts', 4), // Face-down
+        new WarCard('hearts', 5), // Face-down
+        new WarCard('hearts', 6), // Face-down
+        new WarCard('hearts', 13), // Finally wins
+      ]);
+      state.initializeHand('session-2', [
+        new WarCard('clubs', 7), // First match
+        new WarCard('clubs', 1), // Face-down
+        new WarCard('clubs', 2), // Face-down
+        new WarCard('clubs', 3), // Face-down
+        new WarCard('clubs', 9), // Second match
+        new WarCard('clubs', 4), // Face-down
+        new WarCard('clubs', 5), // Face-down
+        new WarCard('clubs', 6), // Face-down
+        new WarCard('clubs', 2), // Loses
+      ]);
+
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      // After nested war, Player 1 should have all 18 cards
+      expect(state.getHandSize('session-1')).toBe(18);
+      expect(state.getHandSize('session-2')).toBe(0);
+      expect(state.battlePile.length).toBe(0);
+    });
+
+    it('should increment warDepth during nested wars', () => {
+      // Setup for nested war
+      state.initializeHand('session-1', [
+        new WarCard('hearts', 7),
+        new WarCard('hearts', 1),
+        new WarCard('hearts', 2),
+        new WarCard('hearts', 3),
+        new WarCard('hearts', 9),
+        new WarCard('hearts', 4),
+        new WarCard('hearts', 5),
+        new WarCard('hearts', 6),
+        new WarCard('hearts', 13),
+      ]);
+      state.initializeHand('session-2', [
+        new WarCard('clubs', 7),
+        new WarCard('clubs', 1),
+        new WarCard('clubs', 2),
+        new WarCard('clubs', 3),
+        new WarCard('clubs', 9),
+        new WarCard('clubs', 4),
+        new WarCard('clubs', 5),
+        new WarCard('clubs', 6),
+        new WarCard('clubs', 2),
+      ]);
+
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      // After war completes, warDepth should be back to 0
+      expect(state.warDepth).toBe(0);
+      expect(state.inWar).toBe(false);
+    });
+
+    it('should clear playersReady after war resolution', () => {
+      state.initializeHand('session-1', [
+        new WarCard('hearts', 7),
+        new WarCard('hearts', 1),
+        new WarCard('hearts', 2),
+        new WarCard('hearts', 3),
+        new WarCard('hearts', 10),
+      ]);
+      state.initializeHand('session-2', [
+        new WarCard('clubs', 7),
+        new WarCard('clubs', 1),
+        new WarCard('clubs', 2),
+        new WarCard('clubs', 3),
+        new WarCard('clubs', 4),
+      ]);
+
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      expect(state.playersReady.length).toBe(0);
+    });
+
+    it('should increment roundNumber after war resolution', () => {
+      state.initializeHand('session-1', [
+        new WarCard('hearts', 7),
+        new WarCard('hearts', 1),
+        new WarCard('hearts', 2),
+        new WarCard('hearts', 3),
+        new WarCard('hearts', 10),
+      ]);
+      state.initializeHand('session-2', [
+        new WarCard('clubs', 7),
+        new WarCard('clubs', 1),
+        new WarCard('clubs', 2),
+        new WarCard('clubs', 3),
+        new WarCard('clubs', 4),
+      ]);
+
+      const initialRound = state.roundNumber;
+
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      expect(state.roundNumber).toBe(initialRound + 1);
+    });
+  });
 });

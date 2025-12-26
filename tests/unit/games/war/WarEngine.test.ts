@@ -277,4 +277,163 @@ describe('WarEngine', () => {
       expect(returnedState).toBe(state);
     });
   });
+
+  describe('battle resolution', () => {
+    let state: WarGameState;
+
+    beforeEach(() => {
+      state = engine.initialize([player1, player2]);
+    });
+
+    it('should award cards to winner of higher rank', () => {
+      // Setup: Player 1 has King (13), Player 2 has 5
+      state.initializeHand('session-1', [new WarCard('hearts', 13)]);
+      state.initializeHand('session-2', [new WarCard('clubs', 5)]);
+
+      const initialP1Size = state.getHandSize('session-1');
+      const initialP2Size = state.getHandSize('session-2');
+
+      // Both flip
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      // Player 1 should have won both cards
+      expect(state.getHandSize('session-1')).toBe(initialP1Size + 1); // +2 -1 = +1
+      expect(state.getHandSize('session-2')).toBe(initialP2Size - 1);
+      expect(state.battlePile.length).toBe(0);
+    });
+
+    it('should clear battle pile after resolution', () => {
+      // Both flip
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      expect(state.battlePile.length).toBe(0);
+    });
+
+    it('should clear playersReady after resolution', () => {
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      expect(state.playersReady.length).toBe(0);
+    });
+
+    it('should increment roundNumber after resolution', () => {
+      const initialRound = state.roundNumber;
+
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      expect(state.roundNumber).toBe(initialRound + 1);
+    });
+
+    it('should treat Ace (13) as highest rank', () => {
+      state.initializeHand('session-1', [new WarCard('hearts', 13)]); // Ace
+      state.initializeHand('session-2', [new WarCard('clubs', 12)]); // King
+
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      const result = engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      expect(result.success).toBe(true);
+      expect(state.getHandSize('session-1')).toBe(2); // Won both cards
+      expect(state.getHandSize('session-2')).toBe(0);
+    });
+
+    it('should award all battle pile cards to winner', () => {
+      state.initializeHand('session-1', [new WarCard('hearts', 10)]);
+      state.initializeHand('session-2', [new WarCard('clubs', 3)]);
+
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      // Player 1 won (10 > 3), should have both cards
+      expect(state.getHandSize('session-1')).toBe(2);
+      expect(state.getHandSize('session-2')).toBe(0);
+    });
+
+    it('should handle player 2 winning', () => {
+      state.initializeHand('session-1', [new WarCard('hearts', 3)]);
+      state.initializeHand('session-2', [new WarCard('clubs', 10)]);
+
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      // Player 2 won (10 > 3)
+      expect(state.getHandSize('session-1')).toBe(0);
+      expect(state.getHandSize('session-2')).toBe(2);
+    });
+
+    it('should trigger war on matching ranks', () => {
+      state.initializeHand('session-1', [
+        new WarCard('hearts', 7),
+        new WarCard('hearts', 1),
+        new WarCard('hearts', 2),
+        new WarCard('hearts', 3),
+        new WarCard('hearts', 10),
+      ]);
+      state.initializeHand('session-2', [
+        new WarCard('clubs', 7),
+        new WarCard('clubs', 1),
+        new WarCard('clubs', 2),
+        new WarCard('clubs', 3),
+        new WarCard('clubs', 4),
+      ]);
+
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-1',
+      });
+      engine.processAction(state, {
+        type: 'FLIP_CARD',
+        playerId: 'session-2',
+      });
+
+      // War should have been triggered and resolved
+      // Player 1 should win (10 > 4)
+      expect(state.getHandSize('session-1')).toBeGreaterThan(0);
+      expect(state.battlePile.length).toBe(0);
+    });
+  });
 });

@@ -380,19 +380,43 @@ export class WarEngine implements IGameEngine<WarGameState> {
 
   /**
    * Check if game has ended
-   * Stub for now - will be implemented in Commit 10
+   * Game is over when any player has 0 cards
    */
   isGameOver(state: WarGameState): boolean {
-    // Stub implementation
+    const players = Array.from(state.players.keys());
+
+    for (const playerId of players) {
+      const handSize = state.getHandSize(playerId);
+      if (handSize === 0) {
+        log('Game over: player has no cards', { playerId });
+        return true;
+      }
+    }
+
     return false;
   }
 
   /**
    * Get the winner (player with all cards)
-   * Stub for now - will be implemented in Commit 10
+   * Returns null if game is not over
    */
   getWinner(state: WarGameState): string | null {
-    // Stub implementation
+    if (!this.isGameOver(state)) {
+      return null;
+    }
+
+    const players = Array.from(state.players.keys());
+
+    for (const playerId of players) {
+      const handSize = state.getHandSize(playerId);
+      if (handSize > 0) {
+        log('Winner determined', { playerId, handSize });
+        return playerId;
+      }
+    }
+
+    // Shouldn't reach here if isGameOver is true
+    log.error('Game is over but no winner found');
     return null;
   }
 

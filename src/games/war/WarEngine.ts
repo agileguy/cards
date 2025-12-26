@@ -164,12 +164,98 @@ export class WarEngine implements IGameEngine<WarGameState> {
 
   /**
    * Resolve battle between two flipped cards
-   * Stub for now - will be implemented in Commit 6
    */
   private resolveBattle(state: WarGameState): void {
-    log('resolveBattle called (stub)');
+    log('Resolving battle', { battlePileSize: state.battlePile.length });
 
-    // Stub implementation: Just clear battle pile and ready state
+    const players = Array.from(state.players.keys());
+
+    // Get last card from each player (their face-up card)
+    const player1Cards = this.getPlayerBattleCards(state, players[0]);
+    const player2Cards = this.getPlayerBattleCards(state, players[1]);
+
+    if (player1Cards.length === 0 || player2Cards.length === 0) {
+      log.error('No cards in battle for one player');
+      return;
+    }
+
+    const card1 = player1Cards[player1Cards.length - 1];
+    const card2 = player2Cards[player2Cards.length - 1];
+
+    log('Comparing cards', {
+      player1: { rank: card1.rank, suit: card1.suit },
+      player2: { rank: card2.rank, suit: card2.suit },
+    });
+
+    if (card1.rank > card2.rank) {
+      log('Player 1 wins battle');
+      this.awardBattlePile(state, players[0]);
+    } else if (card2.rank > card1.rank) {
+      log('Player 2 wins battle');
+      this.awardBattlePile(state, players[1]);
+    } else {
+      log('WAR! Ranks match');
+      this.handleWar(state);
+      return; // War will handle cleanup
+    }
+
+    // Cleanup after normal battle
+    state.roundNumber++;
+    state.clearPlayersReady();
+  }
+
+  /**
+   * Get all cards in battle pile belonging to this player
+   * Cards are interleaved (player1, player2, player1, player2, ...)
+   */
+  private getPlayerBattleCards(state: WarGameState, playerId: string): WarCard[] {
+    const players = Array.from(state.players.keys());
+    const playerIndex = players.indexOf(playerId);
+
+    const cards: WarCard[] = [];
+    for (let i = playerIndex; i < state.battlePile.length; i += 2) {
+      cards.push(state.battlePile[i]);
+    }
+
+    return cards;
+  }
+
+  /**
+   * Award all battle pile cards to the winner
+   */
+  private awardBattlePile(state: WarGameState, winnerId: string): void {
+    log('Awarding battle pile to', winnerId, {
+      cardsWon: state.battlePile.length,
+    });
+
+    const winnerHand = state.playerHands.get(winnerId);
+    if (!winnerHand) {
+      log.error('Winner hand not found');
+      return;
+    }
+
+    // Add all battle pile cards to bottom of winner's hand
+    state.battlePile.forEach((card) => {
+      winnerHand.push(card);
+    });
+
+    // Clear battle pile
+    state.clearBattlePile();
+
+    log('Battle pile awarded', {
+      winnerId,
+      newHandSize: state.getHandSize(winnerId),
+    });
+  }
+
+  /**
+   * Handle WAR mechanism
+   * Stub for now - will be implemented in Commit 8
+   */
+  private handleWar(state: WarGameState): void {
+    log('handleWar called (stub)');
+
+    // Stub implementation: Just clear and continue
     state.clearBattlePile();
     state.clearPlayersReady();
     state.roundNumber++;

@@ -6,6 +6,7 @@ import { metrics } from '../utils/metrics';
 import { config } from './config';
 import { LobbyRoom } from '../rooms/LobbyRoom';
 import { SnapRoom } from '../rooms/SnapRoom';
+import { WarRoom } from '../rooms/WarRoom';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('server');
@@ -23,6 +24,9 @@ gameServer.define('lobby', LobbyRoom);
 // Define snap game room with matchId filtering for proper matchmaking
 // This ensures players with the same matchId join the same room
 gameServer.define('snap', SnapRoom).filterBy(['matchId']);
+
+// Define war game room with matchId filtering for proper matchmaking
+gameServer.define('war', WarRoom).filterBy(['matchId']);
 
 // Serve static files from public directory
 app.use(express.static('public'));
@@ -55,7 +59,7 @@ app.get(config.metricsPath, async (req, res) => {
 
 // Available games endpoint
 app.get('/api/games', (req, res) => {
-  res.json({ games: ['snap'] });
+  res.json({ games: ['snap', 'war'] });
 });
 
 // Lobby count endpoint

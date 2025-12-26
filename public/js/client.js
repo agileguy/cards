@@ -33,13 +33,14 @@ export class GameClient {
   /**
    * Join or create a lobby room
    */
-  async joinLobby(playerName) {
+  async joinLobby(playerName, gameType = 'snap') {
     if (!this.ready) {
       await this.initialize();
     }
 
     this.currentRoom = await this.client.joinOrCreate('lobby', {
-      name: playerName
+      name: playerName,
+      gameType: gameType
     });
 
     return this.currentRoom;
@@ -48,14 +49,14 @@ export class GameClient {
   /**
    * Join a specific game room by ID (or name for matchmaking)
    */
-  async joinGame(roomId, playerName) {
+  async joinGame(roomId, playerName, gameType = 'snap') {
     if (!this.ready) {
       await this.initialize();
     }
 
     // Use joinOrCreate with matchId option for room filtering
     // Server uses filterBy(['matchId']) to ensure matched players join the same room
-    this.currentRoom = await this.client.joinOrCreate('snap', {
+    this.currentRoom = await this.client.joinOrCreate(gameType, {
       matchId: roomId,
       name: playerName || 'Player',
     });

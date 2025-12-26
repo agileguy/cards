@@ -22,8 +22,9 @@ Access the game UI at **http://localhost:2567**
 ### Pages
 
 - `/` - Landing page with game selection
-- `/lobby.html` - Join matchmaking queue
+- `/lobby.html` - Join matchmaking queue and select game type
 - `/game.html?matchId=<id>` - Play Snap card game
+- `/war.html?matchId=<id>` - Play War card game
 
 ### Features
 
@@ -50,6 +51,52 @@ docker compose run e2e npx playwright test --debug
 ```
 
 See [docs/FRONTEND.md](./docs/FRONTEND.md) for complete frontend architecture guide.
+
+## Games
+
+The server implements a pluggable game architecture supporting multiple card games. All games use the same lobby system for matchmaking, with players matched based on their selected game type.
+
+### Snap
+
+**Type**: Turn-based card game
+**Players**: 2
+**Objective**: Collect all 52 cards by winning snap battles
+
+**Rules:**
+1. Players alternate playing cards to a central pile
+2. When two consecutive cards have the same rank, players race to click "Snap!"
+3. First player to snap correctly wins the entire pile
+4. Incorrect snaps incur a one-card penalty
+5. Game ends when one player collects all cards
+
+**Architecture:**
+- State: `SnapGameState` (central pile, turn tracking)
+- Engine: `SnapEngine` (turn-based logic, snap validation)
+- Room: `SnapRoom` (message handlers for play_card and snap)
+
+### War
+
+**Type**: Simultaneous-play card game
+**Players**: 2
+**Objective**: Collect all 52 cards by winning battles
+
+**Rules:**
+1. Deck is split evenly (26 cards each)
+2. Both players flip cards simultaneously
+3. Higher rank wins both cards (Ace = 13 is highest)
+4. On tie → WAR: Each player plays 3 face-down cards, then 1 face-up. Winner of face-up battle takes all cards
+5. Game ends when one player has all cards or runs out during a war
+
+**Architecture:**
+- State: `WarGameState` (battle pile, ready tracking, war state)
+- Engine: `WarEngine` (simultaneous play, war mechanism, battle resolution)
+- Room: `WarRoom` (message handler for flip_card)
+
+**Key Differences from Snap:**
+- No turn system (both players can act simultaneously)
+- Cards have faceUp state (for face-down cards during war)
+- playersReady tracking to detect when both have flipped
+- Recursive war mechanism for nested ties
 
 ## Prerequisites
 
@@ -133,16 +180,20 @@ cards/
 │   ├── rooms/
 │   │   ├── LobbyRoom.ts      # Matchmaking lobby
 │   │   ├── GameRoom.ts       # Abstract game base class
-│   │   └── SnapRoom.ts       # Snap game implementation
+│   │   ├── SnapRoom.ts       # Snap game implementation
+│   │   └── WarRoom.ts        # War game implementation
 │   ├── games/
 │   │   ├── IGameEngine.ts    # Game engine interface
-│   │   └── snap/
-│   │       └── SnapEngine.ts # Snap game logic
+│   │   ├── snap/
+│   │   │   └── SnapEngine.ts # Snap game logic
+│   │   └── war/
+│   │       └── WarEngine.ts  # War game logic
 │   ├── schemas/
 │   │   ├── Player.ts         # Player schema
 │   │   ├── LobbyState.ts     # Lobby state schema
 │   │   ├── BaseGameState.ts  # Base game state
-│   │   └── SnapGameState.ts  # Snap game state
+│   │   ├── SnapGameState.ts  # Snap game state
+│   │   └── WarGameState.ts   # War game state
 │   └── utils/
 │       ├── Card.ts           # Card class
 │       ├── Deck.ts           # Deck class
@@ -152,15 +203,18 @@ cards/
 ├── public/                   # Frontend (Vanilla JS)
 │   ├── index.html            # Landing page
 │   ├── lobby.html            # Matchmaking page
-│   ├── game.html             # Game board
+│   ├── game.html             # Snap game board
+│   ├── war.html              # War game board
 │   ├── css/
 │   │   ├── style.css         # Main styles
 │   │   ├── cards.css         # Card rendering
-│   │   └── animations.css    # Animation library
+│   │   ├── animations.css    # Animation library
+│   │   └── war.css           # War game specific styles
 │   └── js/
 │       ├── client.js         # Colyseus client wrapper
 │       ├── lobby.js          # Lobby page logic
-│       ├── game.js           # Game page logic
+│       ├── game.js           # Snap game page logic
+│       ├── war.js            # War game page logic
 │       ├── lib/              # External libraries
 │       ├── components/       # UI components
 │       └── utils/            # Utilities
@@ -280,6 +334,7 @@ Access Grafana at http://localhost:3000 (admin/admin) to visualize metrics.
 
 - `ws://localhost:2567/lobby` - Matchmaking lobby room
 - `ws://localhost:2567/snap` - Snap card game room
+- `ws://localhost:2567/war` - War card game room
 
 See [docs/API.md](./docs/API.md) for complete WebSocket API documentation.
 

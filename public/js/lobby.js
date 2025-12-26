@@ -76,9 +76,11 @@ joinForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const playerName = playerNameInput.value.trim();
+  const gameType = document.querySelector('input[name="gameType"]:checked')?.value || 'snap';
 
   console.log('=== LOBBY FORM SUBMIT ===');
   console.log('Player name:', playerName);
+  console.log('Game type:', gameType);
 
   if (!playerName) {
     showError('Please enter your name');
@@ -94,9 +96,10 @@ joinForm.addEventListener('submit', async (e) => {
     console.log('Attempting to join lobby...');
     console.log('Client:', client);
     console.log('Client type:', typeof client);
+    console.log('Joining with gameType:', gameType);
 
-    // Join lobby
-    currentRoom = await client.joinLobby(playerName);
+    // Join lobby with gameType
+    currentRoom = await client.joinLobby(playerName, gameType);
     console.log('✓ Joined lobby!');
     updateConnectionStatus(true);
 
@@ -109,11 +112,22 @@ joinForm.addEventListener('submit', async (e) => {
     });
 
     currentRoom.onMessage('matched', (message) => {
-      console.log('Matched!', message);
+      console.log('=== MATCHED MESSAGE RECEIVED ===');
+      console.log('Full message:', message);
+      console.log('gameType from message:', message.gameType);
+      console.log('matchId:', message.matchId);
 
-      // Redirect to game page with match ID and player name
-      const gameUrl = `/game.html?matchId=${message.matchId}&name=${encodeURIComponent(playerName)}`;
-      console.log('Redirecting to:', gameUrl);
+      // Determine game URL based on gameType
+      const gamePageMap = {
+        'snap': 'game.html',
+        'war': 'war.html'
+      };
+      const gamePage = gamePageMap[message.gameType] || 'game.html';
+      console.log('Selected gamePage:', gamePage);
+
+      const gameUrl = `/${gamePage}?matchId=${message.matchId}&name=${encodeURIComponent(playerName)}`;
+
+      console.log('Final redirect URL:', gameUrl);
       window.location.href = gameUrl;
     });
 
@@ -146,8 +160,8 @@ joinForm.addEventListener('submit', async (e) => {
       }
     });
 
-    // Send join lobby message
-    currentRoom.send('join_lobby', { name: playerName });
+    // Send join lobby message with game type
+    currentRoom.send('join_lobby', { name: playerName, gameType });
 
   } catch (error) {
     console.error('Failed to join lobby:', error);

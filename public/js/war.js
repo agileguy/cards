@@ -1,5 +1,5 @@
 import { GameClient } from './client.js';
-import { createCard, createCardBack, clearCards, animateCardDeal, animateSnap } from './components/card.js';
+import { createCard, createCardBack, clearCards, animateCardDeal } from './components/card.js';
 
 // Get URL parameters
 const params = new URLSearchParams(window.location.search);
@@ -16,12 +16,13 @@ const opponentNameEl = document.querySelector('.opponent-name');
 const opponentHandSizeEl = document.querySelector('.opponent-area .hand-size');
 const playerNameEl = document.querySelector('.player-name');
 const playerHandSizeEl = document.querySelector('.player-area .hand-size');
-const centralPile = document.querySelector('.central-pile');
-const pileSizeEl = document.querySelector('.pile-size');
-const playCardBtn = document.getElementById('playCardBtn');
-const snapBtn = document.getElementById('snapBtn');
+const battleArea = document.querySelector('.battle-area');
+const playerSlot = document.querySelector('.card-slot.player-slot');
+const opponentSlot = document.querySelector('.card-slot.opponent-slot');
+const roundIndicator = document.querySelector('.round-indicator');
+const warIndicator = document.querySelector('.war-indicator');
+const flipCardBtn = document.getElementById('flipCardBtn');
 const statusMessage = document.querySelector('.status-message');
-const turnIndicator = document.querySelector('.turn-indicator');
 const gameOverSection = document.querySelector('.game-over');
 const gameOverResult = document.querySelector('.game-over .result');
 const gameOverMessage = document.querySelector('.game-over .message');
@@ -86,13 +87,10 @@ function updateHandSizes() {
   }
 
   console.log('Updating hand sizes...');
-  console.log('Player hands:', gameState.playerHands);
-  console.log('My session ID:', mySessionId);
 
   // Get my hand size
   const myHand = gameState.playerHands.get(mySessionId);
   const myHandSize = myHand ? myHand.cards.length : 0;
-  console.log('My hand:', myHand, 'size:', myHandSize);
   playerHandSizeEl.textContent = `${myHandSize} cards`;
 
   // Get opponent
@@ -102,62 +100,120 @@ function updateHandSizes() {
   if (opponent) {
     const opponentHand = gameState.playerHands.get(opponent.sessionId);
     const opponentHandSize = opponentHand ? opponentHand.cards.length : 0;
-    console.log('Opponent hand:', opponentHand, 'size:', opponentHandSize);
     opponentHandSizeEl.textContent = `${opponentHandSize} cards`;
   }
 }
 
 /**
- * Update central pile display
+ * Update battle area display
  */
-function updateCentralPile() {
-  if (!gameState || !gameState.centralPile) return;
+function updateBattleArea() {
+  if (!gameState || !gameState.battlePile) return;
 
-  clearCards(centralPile);
+  const battleCards = Array.from(gameState.battlePile);
+  const players = Array.from(gameState.players.values());
+  const opponent = players.find(p => p.sessionId !== mySessionId);
 
-  const pileCards = Array.from(gameState.centralPile);
-  pileSizeEl.textContent = `${pileCards.length} cards in pile`;
+  console.log('=== UPDATE BATTLE AREA ===');
+  console.log('Battle pile length:', battleCards.length);
+  console.log('Battle cards:', battleCards);
+  console.log('Players:', players);
+  console.log('My session ID:', mySessionId);
 
-  if (pileCards.length === 0) {
-    const placeholder = document.createElement('div');
-    placeholder.className = 'pile-placeholder';
-    placeholder.textContent = 'No cards played yet';
-    centralPile.appendChild(placeholder);
+  // Clear both slots
+  clearCards(playerSlot);
+  clearCards(opponentSlot);
+
+  if (battleCards.length === 0) {
+    // Show placeholders
+    const playerPlaceholder = document.createElement('div');
+    playerPlaceholder.className = 'slot-placeholder';
+    playerPlaceholder.textContent = 'Waiting...';
+    playerSlot.appendChild(playerPlaceholder);
+
+    const opponentPlaceholder = document.createElement('div');
+    opponentPlaceholder.className = 'slot-placeholder';
+    opponentPlaceholder.textContent = 'Waiting...';
+    opponentSlot.appendChild(opponentPlaceholder);
     return;
   }
 
-  // Show only the last few cards (stacked effect)
-  const cardsToShow = Math.min(pileCards.length, 3);
-  const startIndex = pileCards.length - cardsToShow;
+  // Cards are interleaved: player1, player2, player1, player2, ...
+  // Determine which player is which index
+  const player1Id = players[0]?.sessionId;
+  const myIndex = player1Id === mySessionId ? 0 : 1;
+  const opponentIndex = myIndex === 0 ? 1 : 0;
 
-  for (let i = startIndex; i < pileCards.length; i++) {
-    const cardData = pileCards[i];
-    const card = createCard(cardData.suit, cardData.rank);
-    centralPile.appendChild(card);
+  console.log('Player 1 ID:', player1Id);
+  console.log('My index:', myIndex, 'Opponent index:', opponentIndex);
+
+  // Get the last card for each player from the battle pile
+  let myLastCard = null;
+  let opponentLastCard = null;
+
+  for (let i = myIndex; i < battleCards.length; i += 2) {
+    myLastCard = battleCards[i];
   }
 
-  // Add snap highlight if available
-  if (gameState.snapAvailable) {
-    centralPile.classList.add('snap-available');
+  for (let i = opponentIndex; i < battleCards.length; i += 2) {
+    opponentLastCard = battleCards[i];
+  }
+
+  console.log('My last card:', myLastCard);
+  console.log('Opponent last card:', opponentLastCard);
+
+  // Display my card
+  if (myLastCard) {
+    if (myLastCard.faceUp) {
+      const card = createCard(myLastCard.suit, myLastCard.rank);
+      playerSlot.appendChild(card);
+    } else {
+      const cardBack = createCardBack();
+      playerSlot.appendChild(cardBack);
+    }
   } else {
-    centralPile.classList.remove('snap-available');
+    const playerPlaceholder = document.createElement('div');
+    playerPlaceholder.className = 'slot-placeholder';
+    playerPlaceholder.textContent = 'Waiting...';
+    playerSlot.appendChild(playerPlaceholder);
+  }
+
+  // Display opponent's card
+  if (opponentLastCard) {
+    if (opponentLastCard.faceUp) {
+      const card = createCard(opponentLastCard.suit, opponentLastCard.rank);
+      opponentSlot.appendChild(card);
+    } else {
+      const cardBack = createCardBack();
+      opponentSlot.appendChild(cardBack);
+    }
+  } else {
+    const opponentPlaceholder = document.createElement('div');
+    opponentPlaceholder.className = 'slot-placeholder';
+    opponentPlaceholder.textContent = 'Waiting...';
+    opponentSlot.appendChild(opponentPlaceholder);
   }
 }
 
 /**
- * Update turn indicator
+ * Update round indicator
  */
-function updateTurnIndicator() {
+function updateRoundIndicator() {
   if (!gameState) return;
 
-  const isMyTurn = gameState.currentTurn === mySessionId;
+  roundIndicator.textContent = `Round ${gameState.roundNumber || 0}`;
+}
 
-  if (isMyTurn) {
-    turnIndicator.textContent = 'Your turn!';
-    turnIndicator.className = 'turn-indicator your-turn';
+/**
+ * Update WAR indicator
+ */
+function updateWarIndicator() {
+  if (!gameState) return;
+
+  if (gameState.inWar) {
+    warIndicator.classList.add('active');
   } else {
-    turnIndicator.textContent = "Opponent's turn";
-    turnIndicator.className = 'turn-indicator opponent-turn';
+    warIndicator.classList.remove('active');
   }
 }
 
@@ -167,11 +223,16 @@ function updateTurnIndicator() {
 function updateActionButtons() {
   if (!gameState) return;
 
-  const isMyTurn = gameState.currentTurn === mySessionId;
   const isPlaying = gameState.status === 'playing';
+  const myHand = gameState.playerHands.get(mySessionId);
+  const hasCards = myHand && myHand.cards.length > 0;
+  const alreadyFlipped = gameState.playersReady && gameState.playersReady.includes(mySessionId);
 
-  playCardBtn.disabled = !isMyTurn || !isPlaying;
-  snapBtn.disabled = !gameState.snapAvailable || !isPlaying;
+  // Enable button if:
+  // - Game is playing
+  // - I have cards
+  // - I haven't flipped yet this round
+  flipCardBtn.disabled = !isPlaying || !hasCards || alreadyFlipped;
 }
 
 /**
@@ -180,8 +241,9 @@ function updateActionButtons() {
 function updateUI() {
   updatePlayerNames();
   updateHandSizes();
-  updateCentralPile();
-  updateTurnIndicator();
+  updateBattleArea();
+  updateRoundIndicator();
+  updateWarIndicator();
   updateActionButtons();
 }
 
@@ -203,31 +265,20 @@ function showGameOver(winnerId) {
 }
 
 /**
- * Handle play card button click
+ * Handle flip card button click
  */
-playCardBtn.addEventListener('click', () => {
+flipCardBtn.addEventListener('click', () => {
   if (!currentRoom) return;
 
-  currentRoom.send('play_card', {});
-  statusMessage.textContent = 'Playing card...';
-});
-
-/**
- * Handle snap button click
- */
-snapBtn.addEventListener('click', () => {
-  if (!currentRoom) return;
-
-  currentRoom.send('snap', {});
-  animateSnap(centralPile);
-  statusMessage.textContent = 'SNAP!';
+  currentRoom.send('flip_card', {});
+  statusMessage.textContent = 'Flipping card...';
 });
 
 /**
  * Initialize game
  */
 async function initGame() {
-  console.log('=== GAME.JS INITIALIZING ===');
+  console.log('=== WAR.JS INITIALIZING ===');
   console.log('Match ID:', matchId);
   console.log('Player Name:', playerName);
 
@@ -242,7 +293,7 @@ async function initGame() {
     updateConnectionStatus(false);
 
     console.log('Calling client.joinGame with name:', playerName);
-    currentRoom = await client.joinGame(matchId, playerName, 'snap');
+    currentRoom = await client.joinGame(matchId, playerName, 'war');
     mySessionId = currentRoom.sessionId;
 
     console.log('✓ Successfully joined game!');
@@ -265,44 +316,60 @@ async function initGame() {
 
     // Try setting up field-specific listeners with error handling
     try {
-      if (currentRoom.state.hasOwnProperty('currentTurn')) {
-        currentRoom.state.listen('currentTurn', (value) => {
-          console.log('🎯 Turn changed to:', value);
+      if (currentRoom.state.hasOwnProperty('roundNumber')) {
+        currentRoom.state.listen('roundNumber', (value) => {
+          console.log('🎯 Round changed to:', value);
           gameState = currentRoom.state;
-          updateTurnIndicator();
-          updateActionButtons();
+          updateRoundIndicator();
         });
       }
     } catch (e) {
-      console.warn('Could not set up currentTurn listener:', e);
+      console.warn('Could not set up roundNumber listener:', e);
     }
 
     try {
-      if (currentRoom.state.hasOwnProperty('snapAvailable')) {
-        currentRoom.state.listen('snapAvailable', (value) => {
-          console.log('⚡ Snap available changed to:', value);
+      if (currentRoom.state.hasOwnProperty('inWar')) {
+        currentRoom.state.listen('inWar', (value) => {
+          console.log('⚔️ inWar changed to:', value);
           gameState = currentRoom.state;
-          updateActionButtons();
+          updateWarIndicator();
         });
       }
     } catch (e) {
-      console.warn('Could not set up snapAvailable listener:', e);
+      console.warn('Could not set up inWar listener:', e);
     }
 
-    // Listen for changes to the central pile array
-    if (currentRoom.state.centralPile) {
-      currentRoom.state.centralPile.onAdd = (card, index) => {
-        console.log('🃏 Card added to pile at index', index, ':', card);
+    // Listen for changes to the battle pile array
+    if (currentRoom.state.battlePile) {
+      currentRoom.state.battlePile.onAdd = (card, index) => {
+        console.log('🃏 Card added to battle pile at index', index, ':', card);
         gameState = currentRoom.state;
-        updateCentralPile();
+        updateBattleArea();
         updateHandSizes();
+        updateActionButtons();
       };
 
-      currentRoom.state.centralPile.onRemove = (card, index) => {
-        console.log('🗑️ Card removed from pile at index', index);
+      currentRoom.state.battlePile.onRemove = (card, index) => {
+        console.log('🗑️ Card removed from battle pile at index', index);
         gameState = currentRoom.state;
-        updateCentralPile();
+        updateBattleArea();
         updateHandSizes();
+        updateActionButtons();
+      };
+    }
+
+    // Listen for changes to playersReady array
+    if (currentRoom.state.playersReady) {
+      currentRoom.state.playersReady.onAdd = (sessionId, index) => {
+        console.log('✋ Player ready:', sessionId, 'at index', index);
+        gameState = currentRoom.state;
+        updateActionButtons();
+      };
+
+      currentRoom.state.playersReady.onRemove = (sessionId, index) => {
+        console.log('🗑️ Player unready:', sessionId, 'at index', index);
+        gameState = currentRoom.state;
+        updateActionButtons();
       };
     }
 
@@ -318,12 +385,14 @@ async function initGame() {
             console.log('🃏 Card added to', sessionId, 'hand at index', index);
             gameState = currentRoom.state;
             updateHandSizes();
+            updateActionButtons();
           };
 
           hand.cards.onRemove = (card, index) => {
             console.log('🗑️ Card removed from', sessionId, 'hand at index', index);
             gameState = currentRoom.state;
             updateHandSizes();
+            updateActionButtons();
           };
         }
 
@@ -347,12 +416,14 @@ async function initGame() {
               console.log('🃏 Card added to', sessionId, 'hand at index', index);
               gameState = currentRoom.state;
               updateHandSizes();
+              updateActionButtons();
             };
 
             hand.cards.onRemove = (card, index) => {
               console.log('🗑️ Card removed from', sessionId, 'hand at index', index);
               gameState = currentRoom.state;
               updateHandSizes();
+              updateActionButtons();
             };
           }
         });
@@ -360,24 +431,23 @@ async function initGame() {
     }, 200);
 
     // Listen for game messages
-    currentRoom.onMessage('card_played', (message) => {
-      console.log('Card played message:', message);
-      statusMessage.textContent = `Card played by ${message.playerId === mySessionId ? 'you' : 'opponent'}`;
+    currentRoom.onMessage('card_flipped', (message) => {
+      console.log('Card flipped message:', message);
+      const isMe = message.playerId === mySessionId;
+      statusMessage.textContent = isMe ? 'You flipped a card!' : 'Opponent flipped a card!';
       updateUI();
     });
 
-    currentRoom.onMessage('snap_success', (message) => {
-      console.log('Snap success message:', message);
-      const isMe = message.playerId === mySessionId;
-      statusMessage.textContent = isMe ? 'You got the pile!' : 'Opponent got the pile!';
-      animateSnap(centralPile);
+    currentRoom.onMessage('battle_resolved', (message) => {
+      console.log('Battle resolved message:', message);
+      statusMessage.textContent = `Battle resolved! Round ${message.roundNumber}`;
       updateUI();
     });
 
-    currentRoom.onMessage('snap_fail', (message) => {
-      console.log('Snap fail message:', message);
-      const isMe = message.playerId === mySessionId;
-      statusMessage.textContent = isMe ? 'Wrong! Penalty card lost' : 'Opponent snapped wrong!';
+    currentRoom.onMessage('war_started', (message) => {
+      console.log('WAR started message:', message);
+      statusMessage.textContent = 'WAR!';
+      updateWarIndicator();
       updateUI();
     });
 
@@ -412,8 +482,8 @@ async function initGame() {
     console.log('Initial game state:', {
       status: gameState?.status,
       players: gameState?.players ? gameState.players.size : 0,
-      currentTurn: gameState?.currentTurn,
-      pileSize: gameState?.centralPile ? gameState.centralPile.length : 0
+      roundNumber: gameState?.roundNumber,
+      battlePileSize: gameState?.battlePile ? gameState.battlePile.length : 0
     });
 
     // Initial UI update
@@ -430,7 +500,7 @@ async function initGame() {
   }
 }
 
-console.log('=== GAME.JS LOADED ===');
+console.log('=== WAR.JS LOADED ===');
 
 // Initialize when page loads
 initGame();

@@ -48,14 +48,16 @@ export class LobbyRoom extends Room<LobbyState> {
 
   onJoin(client: Client, options: any): void {
     const playerName = options.name || 'Player';
+    const gameType = options.gameType || 'snap';
     log('onJoin:', {
       sessionId: client.sessionId,
       name: playerName,
+      gameType,
       roomId: this.roomId,
       timestamp: new Date().toISOString(),
     });
 
-    const player = new Player(client.sessionId, playerName);
+    const player = new Player(client.sessionId, playerName, gameType);
     const added = this.state.addPlayer(player);
 
     log('Player added to state:', {
@@ -248,10 +250,12 @@ export class LobbyRoom extends Room<LobbyState> {
           matchId: match.matchId,
           opponentSessionId: match.player2SessionId,
           matchedAt: match.matchedAt,
+          gameType: player1.gameType,
         });
         log('Sent matched message to player1:', {
           sessionId: match.player1SessionId,
           matchId: match.matchId,
+          gameType: player1.gameType,
         });
       }
 
@@ -260,10 +264,12 @@ export class LobbyRoom extends Room<LobbyState> {
           matchId: match.matchId,
           opponentSessionId: match.player1SessionId,
           matchedAt: match.matchedAt,
+          gameType: player2.gameType,
         });
         log('Sent matched message to player2:', {
           sessionId: match.player2SessionId,
           matchId: match.matchId,
+          gameType: player2.gameType,
         });
       }
 

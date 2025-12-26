@@ -62,6 +62,41 @@ Phase 3 delivered a full-stack multiplayer card game:
 
 **Next Phase:** Additional game types or advanced features
 
+## Phase 4 Status: ✅ COMPLETE
+
+**Completed:**
+
+- War card game implementation (validates pluggable architecture)
+- WarGameState schema with simultaneous play support
+- WarEngine with battle resolution and recursive WAR mechanism
+- WarRoom with flip_card message handler
+- Complete War frontend (war.html, war.js, war.css)
+- Battle area UI with 2 card slots and WAR indicator
+- E2E tests for War gameplay (23 tests)
+- Integration tests for WarRoom
+- Lobby game selection UI (Snap vs War radio buttons)
+- Matchmaker filtering by gameType
+- Server registration for /war WebSocket endpoint
+- Documentation updates (README, CLAUDE.md)
+- "Adding a New Game" implementation guide
+
+**Achievements:**
+
+Phase 4 proved the pluggable game architecture works:
+- Backend: Two complete games (Snap turn-based, War simultaneous)
+- Architecture: IGameEngine interface supports different game mechanics
+- Matchmaking: Automatic filtering by game type
+- Testing: 400+ tests passing (unit, integration, E2E)
+- Documentation: Complete guide for adding new games
+
+**Key Learnings:**
+- Simultaneous play uses playersReady array (vs currentTurn)
+- Complex mechanics (recursive wars) need careful state management
+- faceUp boolean needed for card visibility control
+- Interleaved battle pile pattern for card ownership tracking
+
+**Next Phase:** Additional features (spectator mode, tournaments, etc.)
+
 ---
 
 ## CRITICAL: Test-First Development
@@ -508,6 +543,259 @@ docker compose run --rm test npm run lint
 ```
 
 **Note**: Always fix formatting before linting - Prettier can auto-fix many style issues that ESLint would warn about.
+
+---
+
+## Adding a New Game to the System
+
+This guide documents the pattern for adding new card games to the platform, based on the successful implementation of War as the second game (following Snap).
+
+### Architecture Overview
+
+The system uses a pluggable game architecture with these core components:
+
+1. **IGameEngine** - Interface defining game logic (initialize, processAction, validateAction, isGameOver, getWinner)
+2. **GameRoom** - Abstract base class for rooms (handles player lifecycle, state management)
+3. **BaseGameState** - Base schema for game state (players, status, timestamps)
+4. **LobbyRoom + Matchmaker** - Handles matchmaking, groups players by gameType
+
+### Implementation Steps (20-Commit TDD Pattern)
+
+The War game was implemented in 20 commits following strict TDD. This same pattern should be used for future games:
+
+#### Stage 1: State Schema (Commits 1-2)
+1. **Write schema tests** (test what state properties exist, what helper methods do)
+2. **Implement schema** (extend BaseGameState, add game-specific fields)
+
+**Example from War:**
+```typescript
+// tests/unit/schemas/WarGameState.test.ts
+describe('WarGameState', () => {
+  it('should initialize with inWar false', () => {
+    expect(state.inWar).toBe(false);
+  });
+
+  it('should track players ready for simultaneous play', () => {
+    state.markPlayerReady('session-1');
+    expect(state.playersReady.length).toBe(1);
+  });
+});
+
+// src/schemas/WarGameState.ts
+export class WarGameState extends BaseGameState {
+  @type([WarCard]) public battlePile = new ArraySchema<WarCard>();
+  @type(['string']) public playersReady = new ArraySchema<string>();
+  @type('boolean') public inWar: boolean = false;
+
+  public areBothPlayersReady(): boolean {
+    return this.playersReady.length === 2;
+  }
+}
+```
+
+**Key Decisions:**
+- War needed faceUp boolean on cards (for face-down cards during war)
+- Simultaneous play required playersReady tracking (no currentTurn like Snap)
+- WAR mechanism needed inWar flag and warDepth counter
+
+#### Stage 2: Game Engine (Commits 3-10)
+3. **Write engine initialization tests** (deals cards correctly, sets up initial state)
+4. **Implement initialization**
+5. **Write action processing tests** (basic actions, edge cases)
+6. **Implement action handlers**
+7. **Write special mechanic tests** (War's WAR mechanism, Snap's snap validation)
+8. **Implement special mechanics**
+9. **Write win condition tests**
+10. **Implement win conditions**
+
+**Example from War:**
+```typescript
+// src/games/war/WarEngine.ts
+export class WarEngine implements IGameEngine<WarGameState> {
+  public processAction(state: WarGameState, action: GameAction): ActionResult {
+    if (action.type === 'FLIP_CARD') {
+      // Draw card, add to battle pile, mark player ready
+      state.markPlayerReady(action.playerId);
+
+      // Auto-resolve when both players ready
+      if (state.areBothPlayersReady()) {
+        this.resolveBattle(state);
+      }
+
+      return { success: true };
+    }
+  }
+
+  private resolveBattle(state: WarGameState): void {
+    // Compare ranks, check for tie → trigger WAR
+    if (rank1 === rank2) {
+      this.handleWar(state);
+    } else {
+      // Award pile to winner
+    }
+  }
+
+  private handleWar(state: WarGameState): void {
+    state.inWar = true;
+    // Play 3 face-down + 1 face-up from each player
+    // Recursively resolve (may trigger another war)
+    this.resolveBattle(state);
+  }
+}
+```
+
+**Pattern Notes:**
+- Engine modifies state in-place (Colyseus Schema requirement)
+- Test complex mechanics separately (handleWar got its own test suite)
+- Recursive scenarios need careful testing (nested wars)
+
+#### Stage 3: Room Integration (Commits 11-12)
+11. **Write room unit tests** (gameType, onCreate, message handlers)
+12. **Implement room** (extend GameRoom, define message handlers, broadcast events)
+
+**Example from War:**
+```typescript
+// src/rooms/WarRoom.ts
+export class WarRoom extends GameRoom<WarGameState> {
+  gameType = 'war';
+  minPlayers = 2;
+  maxPlayers = 2;
+
+  createGameEngine(): IGameEngine<WarGameState> {
+    return new WarEngine();
+  }
+
+  onGameStart(): void {
+    this.onMessage('flip_card', (client, message) => {
+      const result = this.gameEngine.processAction(this.state, {
+        type: 'FLIP_CARD',
+        playerId: client.sessionId,
+      });
+
+      if (result.success) {
+        this.broadcast('card_flipped', {
+          playerId: client.sessionId,
+          handSize: this.state.getHandSize(client.sessionId),
+        });
+
+        // Check if battle resolved
+        // Check if game over
+      }
+    });
+  }
+}
+```
+
+**Message Patterns:**
+- Client sends action message (flip_card, play_card, snap)
+- Server validates, processes via engine
+- Server broadcasts result (card_flipped, battle_resolved, game_over)
+- State synchronization happens automatically via Colyseus
+
+#### Stage 4: Frontend (Commits 13-15)
+13. **Write E2E tests** (page loads, UI elements exist, gameplay flow works)
+14. **Implement HTML/JS** (game board, Colyseus client integration, UI updates)
+15. **Implement CSS** (game-specific styles, animations, responsiveness)
+
+**Example from War:**
+```javascript
+// public/js/war.js
+const room = await client.joinGame(matchId, playerName);
+
+room.onStateChange((state) => {
+  gameState = state;
+  updateUI();
+});
+
+room.onMessage('card_flipped', (message) => {
+  statusMessage.textContent = 'Card flipped!';
+  updateBattleArea();
+});
+
+room.onMessage('battle_resolved', (message) => {
+  statusMessage.textContent = `Round ${message.roundNumber}`;
+});
+
+flipCardBtn.addEventListener('click', () => {
+  room.send('flip_card', {});
+});
+```
+
+**UI Patterns:**
+- Battle area shows current cards (interleaved for War, central pile for Snap)
+- Action buttons disabled based on state (already flipped, not your turn)
+- Status messages for all game events
+- Animations for card movements and game events
+
+#### Stage 5: Integration (Commits 16-20)
+16. **Write integration tests** (WarRoom with Colyseus test server)
+17. **Register room with server** (gameServer.define('war', WarRoom))
+18. **Add to lobby selection** (UI for game type, matchmaking by gameType)
+19. **Update README** (game rules, architecture notes)
+20. **Update CLAUDE.md** (this guide!)
+
+### Key Learnings from War Implementation
+
+**Simultaneous Play Pattern:**
+- Use `playersReady` array to track who has acted
+- Check `areBothPlayersReady()` to trigger resolution
+- Clear ready state after each round
+
+**Multi-Step Actions (WAR mechanism):**
+- Use flags (inWar) and counters (warDepth) to track state
+- Handle recursion carefully (war during war)
+- Check resource availability before starting multi-step actions
+
+**Card Visibility:**
+- Add faceUp boolean when needed (War has face-down cards)
+- Server is source of truth for visibility
+- Frontend renders based on server state
+
+**Battle Pile Management:**
+- Interleave cards to track ownership (player1, player2, player1, player2)
+- Extract via index modulo for each player's cards
+- Award entire pile atomically
+
+### Comparison: Snap vs War
+
+| Aspect | Snap (Turn-Based) | War (Simultaneous) |
+|--------|-------------------|-------------------|
+| Turn System | currentTurn string | playersReady array |
+| Card Play | One player at a time | Both players can flip |
+| Central Area | Single pile (ArraySchema<SnapCard>) | Battle slots (2 cards, interleaved) |
+| Special Mechanic | Snap on match | WAR on tie |
+| Card State | All face-up | faceUp boolean |
+| Win Condition | Collect all cards | Collect all cards |
+| Actions | play_card, snap | flip_card |
+| Engine Complexity | Moderate | High (recursive wars) |
+
+### Checklist for Adding a New Game
+
+- [ ] Define game rules clearly (turn-based or simultaneous?)
+- [ ] Design state schema (what fields beyond BaseGameState?)
+- [ ] Design actions (what can players do?)
+- [ ] Write 20-commit TDD plan
+- [ ] Stage 1: Schema tests → implementation (2 commits)
+- [ ] Stage 2: Engine tests → implementation (8 commits)
+- [ ] Stage 3: Room tests → implementation (2 commits)
+- [ ] Stage 4: Frontend tests → implementation (3 commits)
+- [ ] Stage 5: Integration → docs (5 commits)
+- [ ] Update server registration
+- [ ] Update lobby selection
+- [ ] Update README with rules
+- [ ] Update CLAUDE.md with learnings
+- [ ] All 400+ tests passing
+- [ ] E2E tests cover full gameplay
+
+### Tips for Success
+
+1. **Start with schema** - Get state structure right before logic
+2. **Test edge cases** - Empty hands, simultaneous actions, disconnects
+3. **Follow Snap and War patterns** - Proven architecture
+4. **Keep commits focused** - One test file or one implementation per commit
+5. **Run Docker tests frequently** - `docker compose run test`
+6. **Use existing utilities** - Deck, Card, Matchmaker are reusable
+7. **Document differences** - If your game differs from Snap/War, explain why
 
 ---
 

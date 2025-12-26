@@ -271,7 +271,7 @@ async function initGame() {
     updateConnectionStatus(false);
 
     console.log('Calling client.joinGame with name:', playerName);
-    currentRoom = await client.joinGame(matchId, playerName);
+    currentRoom = await client.joinGame(matchId, playerName, 'war');
     mySessionId = currentRoom.sessionId;
 
     console.log('✓ Successfully joined game!');

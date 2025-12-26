@@ -7,13 +7,15 @@ export class Player extends Schema {
   @type('string') public name: string;
   @type('number') public joinedAt: number;
   @type('string') public status: PlayerStatus;
+  @type('string') public gameType: string;
 
-  constructor(sessionId: string, name: string = 'Player') {
+  constructor(sessionId: string, name: string = 'Player', gameType: string = 'snap') {
     super();
     this.sessionId = sessionId;
     this.name = name;
     this.joinedAt = Date.now();
     this.status = 'waiting';
+    this.gameType = gameType;
   }
 
   public setStatus(status: PlayerStatus): void {

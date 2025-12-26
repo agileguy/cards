@@ -76,9 +76,11 @@ joinForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const playerName = playerNameInput.value.trim();
+  const gameType = document.querySelector('input[name="gameType"]:checked')?.value || 'snap';
 
   console.log('=== LOBBY FORM SUBMIT ===');
   console.log('Player name:', playerName);
+  console.log('Game type:', gameType);
 
   if (!playerName) {
     showError('Please enter your name');
@@ -111,8 +113,14 @@ joinForm.addEventListener('submit', async (e) => {
     currentRoom.onMessage('matched', (message) => {
       console.log('Matched!', message);
 
-      // Redirect to game page with match ID and player name
-      const gameUrl = `/game.html?matchId=${message.matchId}&name=${encodeURIComponent(playerName)}`;
+      // Determine game URL based on gameType
+      const gamePageMap = {
+        'snap': 'game.html',
+        'war': 'war.html'
+      };
+      const gamePage = gamePageMap[message.gameType] || 'game.html';
+      const gameUrl = `/${gamePage}?matchId=${message.matchId}&name=${encodeURIComponent(playerName)}`;
+
       console.log('Redirecting to:', gameUrl);
       window.location.href = gameUrl;
     });
@@ -146,8 +154,8 @@ joinForm.addEventListener('submit', async (e) => {
       }
     });
 
-    // Send join lobby message
-    currentRoom.send('join_lobby', { name: playerName });
+    // Send join lobby message with game type
+    currentRoom.send('join_lobby', { name: playerName, gameType });
 
   } catch (error) {
     console.error('Failed to join lobby:', error);

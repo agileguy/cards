@@ -22,16 +22,33 @@ export class Matchmaker {
       return null;
     }
 
-    // FIFO: Take the two oldest players
-    const player1 = validPlayers[0];
-    const player2 = validPlayers[1];
+    // Group players by gameType
+    const playersByGame = new Map<string, Player[]>();
+    validPlayers.forEach((player) => {
+      const gameType = player.gameType || 'snap';
+      if (!playersByGame.has(gameType)) {
+        playersByGame.set(gameType, []);
+      }
+      playersByGame.get(gameType)!.push(player);
+    });
 
-    return {
-      matchId: this.generateMatchId(),
-      player1SessionId: player1.sessionId,
-      player2SessionId: player2.sessionId,
-      matchedAt: Date.now(),
-    };
+    // Find first game type with 2+ players
+    for (const [gameType, players] of playersByGame.entries()) {
+      if (players.length >= 2) {
+        // FIFO: Take the two oldest players for this game type
+        const player1 = players[0];
+        const player2 = players[1];
+
+        return {
+          matchId: this.generateMatchId(),
+          player1SessionId: player1.sessionId,
+          player2SessionId: player2.sessionId,
+          matchedAt: Date.now(),
+        };
+      }
+    }
+
+    return null;
   }
 
   public getTimedOutPlayers(state: LobbyState): string[] {

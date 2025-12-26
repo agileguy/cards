@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>War Game - Cards</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/cards.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/war.css">
+
+  <!-- Import map for Colyseus from CDN -->
+  <script type="importmap">
+  {
+    "imports": {
+      "colyseus.js": "https://cdn.skypack.dev/colyseus.js@0.15.28"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>War</h1>
+      <div class="connection-status">
+        <span class="status-indicator"></span>
+        <span class="status-text">Disconnected</span>
+      </div>
+    </header>
+
+    <main>
+      <div class="game-board">
+        <!-- Opponent area -->
+        <div class="opponent-area">
+          <h3 class="opponent-name">Waiting for opponent...</h3>
+          <div class="hand-info">
+            <span class="hand-size">0 cards</span>
+          </div>
+          <div class="opponent-deck"></div>
+        </div>
+
+        <!-- Battle area (replaces central pile) -->
+        <div class="battle-area">
+          <div class="war-indicator">
+            <span class="war-text">WAR!</span>
+          </div>
+          <div class="card-slots">
+            <div class="card-slot player-slot">
+              <div class="slot-placeholder">Waiting...</div>
+            </div>
+            <div class="card-slot opponent-slot">
+              <div class="slot-placeholder">Waiting...</div>
+            </div>
+          </div>
+          <div class="battle-info">
+            <span class="round-indicator">Round 0</span>
+          </div>
+        </div>
+
+        <!-- Player area -->
+        <div class="player-area">
+          <h3 class="player-name">You</h3>
+          <div class="hand-info">
+            <span class="hand-size">0 cards</span>
+          </div>
+          <div class="player-deck"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+          <button id="flipCardBtn" class="btn-primary" disabled>
+            Flip Card
+          </button>
+        </div>
+
+        <!-- Game status -->
+        <div class="game-status">
+          <div class="status-message"></div>
+        </div>
+
+        <!-- Game over -->
+        <div class="game-over">
+          <h2 class="result"></h2>
+          <p class="message"></p>
+          <a href="/lobby.html" class="btn-primary">Play Again</a>
+        </div>
+      </div>
+
+      <div class="error-message"></div>
+    </main>
+  </div>
+
+  <!-- Load our ES module game code -->
+  <script type="module" src="/js/war.js"></script>
+</body>
+</html>

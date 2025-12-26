@@ -1,0 +1,398 @@
+/* War Game Specific Styles */
+
+/* Battle Area */
+.battle-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  margin: 2rem 0;
+  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+  border-radius: 1rem;
+  border: 2px solid #444;
+  position: relative;
+}
+
+/* WAR Indicator */
+.war-indicator {
+  position: absolute;
+  top: -1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+  color: white;
+  padding: 0.5rem 2rem;
+  border-radius: 2rem;
+  font-weight: bold;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.war-indicator.active {
+  opacity: 1;
+  visibility: visible;
+  animation: warPulse 1s infinite;
+}
+
+@keyframes warPulse {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.1);
+    box-shadow: 0 6px 12px rgba(255, 68, 68, 0.6);
+  }
+}
+
+/* Card Slots */
+.card-slots {
+  display: flex;
+  gap: 3rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-slot {
+  width: 120px;
+  height: 180px;
+  border: 3px dashed #666;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.card-slot:hover {
+  border-color: #888;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.card-slot.player-slot::before {
+  content: "Your Card";
+  position: absolute;
+  bottom: -1.5rem;
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.card-slot.opponent-slot::before {
+  content: "Opponent's Card";
+  position: absolute;
+  bottom: -1.5rem;
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.slot-placeholder {
+  font-size: 0.875rem;
+  color: #666;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Card animations in slots */
+.card-slot .card {
+  animation: cardFlip 0.6s ease;
+}
+
+@keyframes cardFlip {
+  0% {
+    transform: rotateY(90deg);
+    opacity: 0;
+  }
+  100% {
+    transform: rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+/* Battle Info */
+.battle-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Round Indicator */
+.round-indicator {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Opponent and Player Areas */
+.opponent-area,
+.player-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.opponent-area h3,
+.player-area h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #fff;
+}
+
+/* Deck Visualizations */
+.opponent-deck,
+.player-deck {
+  width: 80px;
+  height: 120px;
+  position: relative;
+  margin: 0.5rem 0;
+}
+
+/* Stack of cards effect */
+.opponent-deck::before,
+.opponent-deck::after,
+.player-deck::before,
+.player-deck::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+  border-radius: 0.5rem;
+  border: 2px solid #2c3e50;
+}
+
+.opponent-deck::before,
+.player-deck::before {
+  top: -3px;
+  left: -3px;
+  opacity: 0.6;
+}
+
+.opponent-deck::after,
+.player-deck::after {
+  top: -6px;
+  left: -6px;
+  opacity: 0.3;
+}
+
+/* Hand Info */
+.hand-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.hand-size {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+#flipCardBtn {
+  padding: 1rem 2rem;
+  font-size: 1.25rem;
+  font-weight: bold;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+#flipCardBtn:not(:disabled):hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(74, 144, 226, 0.3);
+}
+
+#flipCardBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Game Status */
+.game-status {
+  text-align: center;
+  min-height: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.status-message {
+  font-size: 1.125rem;
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .battle-area {
+    padding: 1rem;
+    margin: 1rem 0;
+  }
+
+  .card-slots {
+    gap: 1.5rem;
+  }
+
+  .card-slot {
+    width: 90px;
+    height: 135px;
+  }
+
+  .card-slot.player-slot::before,
+  .card-slot.opponent-slot::before {
+    font-size: 0.625rem;
+    bottom: -1.25rem;
+  }
+
+  .war-indicator {
+    font-size: 1.25rem;
+    padding: 0.4rem 1.5rem;
+  }
+
+  .round-indicator {
+    font-size: 1rem;
+  }
+
+  #flipCardBtn {
+    padding: 0.875rem 1.5rem;
+    font-size: 1.125rem;
+  }
+
+  .opponent-deck,
+  .player-deck {
+    width: 60px;
+    height: 90px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-slots {
+    gap: 1rem;
+  }
+
+  .card-slot {
+    width: 70px;
+    height: 105px;
+  }
+
+  .war-indicator {
+    font-size: 1rem;
+    padding: 0.3rem 1rem;
+  }
+
+  .battle-area {
+    padding: 0.75rem;
+  }
+
+  .opponent-area,
+  .player-area {
+    padding: 1rem;
+  }
+
+  .opponent-deck,
+  .player-deck {
+    width: 50px;
+    height: 75px;
+  }
+}
+
+/* Tablet landscape */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .card-slots {
+    gap: 2.5rem;
+  }
+
+  .card-slot {
+    width: 110px;
+    height: 165px;
+  }
+}
+
+/* Desktop large screens */
+@media (min-width: 1920px) {
+  .battle-area {
+    padding: 2.5rem;
+  }
+
+  .card-slots {
+    gap: 4rem;
+  }
+
+  .card-slot {
+    width: 140px;
+    height: 210px;
+  }
+
+  .war-indicator {
+    font-size: 1.75rem;
+  }
+
+  .round-indicator {
+    font-size: 1.5rem;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .card-slot {
+    border-width: 4px;
+    border-color: #fff;
+  }
+
+  .war-indicator {
+    border: 3px solid #fff;
+  }
+
+  .battle-area {
+    border-color: #fff;
+  }
+}

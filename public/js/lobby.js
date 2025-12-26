@@ -96,9 +96,10 @@ joinForm.addEventListener('submit', async (e) => {
     console.log('Attempting to join lobby...');
     console.log('Client:', client);
     console.log('Client type:', typeof client);
+    console.log('Joining with gameType:', gameType);
 
-    // Join lobby
-    currentRoom = await client.joinLobby(playerName);
+    // Join lobby with gameType
+    currentRoom = await client.joinLobby(playerName, gameType);
     console.log('✓ Joined lobby!');
     updateConnectionStatus(true);
 
@@ -111,7 +112,10 @@ joinForm.addEventListener('submit', async (e) => {
     });
 
     currentRoom.onMessage('matched', (message) => {
-      console.log('Matched!', message);
+      console.log('=== MATCHED MESSAGE RECEIVED ===');
+      console.log('Full message:', message);
+      console.log('gameType from message:', message.gameType);
+      console.log('matchId:', message.matchId);
 
       // Determine game URL based on gameType
       const gamePageMap = {
@@ -119,9 +123,11 @@ joinForm.addEventListener('submit', async (e) => {
         'war': 'war.html'
       };
       const gamePage = gamePageMap[message.gameType] || 'game.html';
+      console.log('Selected gamePage:', gamePage);
+
       const gameUrl = `/${gamePage}?matchId=${message.matchId}&name=${encodeURIComponent(playerName)}`;
 
-      console.log('Redirecting to:', gameUrl);
+      console.log('Final redirect URL:', gameUrl);
       window.location.href = gameUrl;
     });
 

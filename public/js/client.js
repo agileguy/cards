@@ -33,13 +33,14 @@ export class GameClient {
   /**
    * Join or create a lobby room
    */
-  async joinLobby(playerName) {
+  async joinLobby(playerName, gameType = 'snap') {
     if (!this.ready) {
       await this.initialize();
     }
 
     this.currentRoom = await this.client.joinOrCreate('lobby', {
-      name: playerName
+      name: playerName,
+      gameType: gameType
     });
 
     return this.currentRoom;
